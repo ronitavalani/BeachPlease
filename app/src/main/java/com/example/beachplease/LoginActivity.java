@@ -23,6 +23,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private boolean authenticateUser(String email, String password) {
         //connect with database
+        return false;
     }
 
     public void registerClick(android.view.View view) {
