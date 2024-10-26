@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
     android:orientation = "vertical"
     android:gravity = "center"
-    android:background = "#A7D8F1"
+    android:background = "@android:color/white"
     android:padding = "16dp">
 
     <EditText
@@ -15,7 +16,36 @@
         android:inputType="textPersonName"
         android:backgroundTint="#0E76A8"
         android:textColor="#0E76A8"
-        android:textColorHint="#6BAED7"
+        android:textColorHint="#6BAED7"/>
 
+    <EditText
+        android:id = "@+id/email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint = "Email"
+        android:inputType="textEmailAddress"
+        android:backgroundTint="#0E76A8"
+        android:textColor="#0E76A8"
+        android:textColorHint="#6BAED7"/>
+
+    <EditText
+        android:id = "@+id/password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint = "Password"
+        android:inputType="textPassword"
+        android:backgroundTint="#0E76A8"
+        android:textColor="#0E76A8"
+        android:textColorHint="#6BAED7" />
+    
+    <Button
+        android:id = "@+id/register"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text = "Sign Up"
+        android:backgroundTint="#0E76A8"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:padding = "12dp" />
 
 </LinearLayout>
