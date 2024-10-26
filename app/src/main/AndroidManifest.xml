@@ -36,6 +36,12 @@
             android:exported="true"
             android:label="Profile" />
 
+        <!-- Register Activity -->
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="true"
+            android:label="Profile" />
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDDczZ9-mTO_jHV1bL-2FW5o1r0kEe3Sbc"/>

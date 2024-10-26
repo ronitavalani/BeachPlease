@@ -1,8 +1,10 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.BeachPlease" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Primary brand color. -->
         <item name="colorPrimary">@color/blue_dark</item>
-        <item name="colorPrimaryVariant">@color/blue_hint</item>
+        <item name="colorPrimaryVariant">@color/blue_dark</item>
         <item name="colorOnPrimary">@color/black</item>
+        <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/blue_light</item>
         <item name="colorSecondaryVariant">@color/blue_light</item>
         <item name="colorOnSecondary">@color/black</item>

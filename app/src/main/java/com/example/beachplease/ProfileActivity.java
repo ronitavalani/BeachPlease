@@ -32,7 +32,7 @@ public class ProfileActivity extends AppCompatActivity {
 
     //should this be an option or should it refresh the profile?
     public void profileClick(android.view.View view) {
-        Intent intent = new Intent(this, ProfileActivity.class);
+        Intent intent = new Intent(this, RegisterActivity.class);
         startActivity(intent);
         finish();
     }
