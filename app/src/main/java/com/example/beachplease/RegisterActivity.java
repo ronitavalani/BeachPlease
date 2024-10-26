@@ -27,7 +27,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private boolean checkUserExists(String email) {
-
+        return false;
     }
 
     public void registerClick(android.view.View view) {
