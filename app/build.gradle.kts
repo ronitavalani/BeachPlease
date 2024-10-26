@@ -1,5 +1,6 @@
 plugins {
-    alias(libs.plugins.android.application)
+    id("com.android.application")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -35,7 +36,7 @@ android {
 }
 
 dependencies {
-
+    implementation("com.google.firebase:firebase-database:21.0.0")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.constraintlayout)
@@ -43,7 +44,6 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
-    implementation(libs.play.services.maps)
     implementation("com.google.android.gms:play-services-maps:19.0.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
