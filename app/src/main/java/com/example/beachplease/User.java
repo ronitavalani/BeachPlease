@@ -1,22 +1,29 @@
 package com.example.beachplease;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class User {
-    private String username;
+    private String userId;
+    private String name;
     private String email;
     private String password;
     private List<Review> reviews;
 
-    public User(String username, String email, String password, List<Review> reviews) {
-        this.username = username;
+    public User(String userId, String name, String email, String password) {
+        this.userId = userId;
+        this.name = name;
         this.email = email;
         this.password = password;
-        this.reviews = reviews;
+        this.reviews = new ArrayList<>();
     }
 
-    public String getUsername() {
-        return username;
+    public String getUserId() {
+        return userId;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public String getEmail() {
@@ -29,5 +36,9 @@ public class User {
 
     public List<Review> getReviews() {
         return reviews;
+    }
+
+    public void addReview(Review review) {
+        reviews.add(review);
     }
 }

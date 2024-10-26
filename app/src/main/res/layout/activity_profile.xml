@@ -48,7 +48,7 @@
             android:id="@+id/logout_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Logout" />
+            android:text="Logout"/>
     </LinearLayout>
 
     <!-- Reviews List Section -->
@@ -111,6 +111,7 @@
             android:layout_weight="1"
             android:src="@android:drawable/ic_menu_myplaces"
             android:contentDescription="Profile Tab"
-            android:background="?attr/selectableItemBackgroundBorderless" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:onClick="profileClick"/>
     </LinearLayout>
 </RelativeLayout>
