@@ -7,31 +7,33 @@ import android.widget.ImageButton;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class ProfileActivity extends AppCompatActivity {
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
+        Intent intent = getIntent();
+    }
 
-        // Setup navigation buttons
-        ImageButton mapTab = findViewById(R.id.mapTab);
-        ImageButton profileTab = findViewById(R.id.profileTab);
+    private void getUserInfo() {
 
-        // Handle Map Tab click - navigate back to MainActivity
-        mapTab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
-                startActivity(intent);
-            }
-        });
+    }
 
-        // Handle Profile Tab click (do nothing as we are already on the Profile page)
-        profileTab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // No action required, already on Profile
-            }
-        });
+    private void listReviews() {
+
+    }
+
+    public void mapClick(android.view.View view) {
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    //should this be an option or should it refresh the profile?
+    public void profileClick(android.view.View view) {
+        Intent intent = new Intent(this, ProfileActivity.class);
+        startActivity(intent);
+        finish();
     }
 }

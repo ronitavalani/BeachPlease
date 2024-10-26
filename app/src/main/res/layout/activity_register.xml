@@ -2,5 +2,20 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+    android:orientation = "vertical"
+    android:gravity = "center"
+    android:background = "#A7D8F1"
+    android:padding = "16dp">
+
+    <EditText
+        android:id = "@+id/name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint = "Full Name"
+        android:inputType="textPersonName"
+        android:backgroundTint="#0E76A8"
+        android:textColor="#0E76A8"
+        android:textColorHint="#6BAED7"
+
 
 </LinearLayout>
