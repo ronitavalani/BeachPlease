@@ -30,7 +30,7 @@ public class RegisterActivity extends AppCompatActivity {
         passwordField = findViewById(R.id.password);
         nameField = findViewById(R.id.name);
 
-        FirebaseDatabase root = FirebaseDatabase.getInstance();
+        FirebaseDatabase root = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/");
         reference = root.getReference("users");
 
         Intent intent = getIntent();
@@ -58,7 +58,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     }
 
-    private boolean checkUserExists(String email) {
+    private boolean checkUserExists(String email, String password, String name) {
         Query query = reference.orderByChild("email").equalTo(email);
 
         query.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -68,8 +68,6 @@ public class RegisterActivity extends AppCompatActivity {
                     Toast.makeText(RegisterActivity.this, "User already exists", Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    String password = passwordField.getText().toString();
-                    String name = nameField.getText().toString();
                     registerUser(email, password, name);
                 }
             }
@@ -92,6 +90,6 @@ public class RegisterActivity extends AppCompatActivity {
             Toast.makeText(this, "Incomplete user information ", Toast.LENGTH_SHORT).show();
             return;
         }
-        checkUserExists(email);
+        checkUserExists(email, password, name);
     }
 }
