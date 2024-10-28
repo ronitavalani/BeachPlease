@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -17,13 +16,24 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp" />
 
+    <!-- Filter Button -->
+    <ImageButton
+        android:id="@+id/filterButton"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Filter Button"
+        android:src="@drawable/ic_filter_button" />
+
     <!-- Google Map API View -->
     <fragment
         android:id="@+id/mapView"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
         android:layout_below="@id/header"
         android:layout_above="@id/navigationBar" />
 
@@ -58,3 +68,4 @@
             android:background="?attr/selectableItemBackgroundBorderless" />
     </LinearLayout>
 </RelativeLayout>
+
