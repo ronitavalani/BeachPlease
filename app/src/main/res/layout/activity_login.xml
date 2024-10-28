@@ -27,7 +27,8 @@
         android:text = "Log In"
         android:backgroundTint="#0E76A8"
         android:textSize= "18sp"
-        android:padding="12dp"/>
+        android:padding="12dp"
+        android:onClick="logInClick"/>
 
     <TextView
         android:id="@+id/signup_text"
@@ -35,6 +36,7 @@
         android:layout_height="wrap_content"
         android:text = "Don't have an account? Sign up"
         android:textColor = "#0E76A8"
-        android:paddingTop = "16dp" />
+        android:paddingTop = "16dp"
+        android:onClick="registerClick"/>
 
 </LinearLayout>

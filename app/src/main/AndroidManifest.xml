@@ -40,7 +40,13 @@
         <activity
             android:name=".RegisterActivity"
             android:exported="true"
-            android:label="Profile" />
+            android:label="Register" />
+
+        <!-- Login Activity -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true"
+            android:label="Login" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
