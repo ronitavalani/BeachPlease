@@ -5,8 +5,11 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-public class Beach {
+
+public class Beach implements Parcelable {
     private String name;
     private Double longitude;
     private Double latitude;
@@ -31,23 +34,27 @@ public class Beach {
         this.tags = new ArrayList<>();
     }
 
-    public String getName() {
-        return name;
-    }
+    // Default constructor needed for Firebase
+    public Beach() {}
 
-    public Double getLongitude() {
-        return longitude;
-    }
+    // Getters and setters
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+  
+    public String getBlurb() { return blurb; }
+    public void setBlurb(String blurb) { this.blurb = blurb; }
+
+    public String getHours() { return hours; }
+    public void setHours(String hours) { this.hours = hours; }
+
+    public Double getAvgRating() { return avgRating; }
+    public void setAvgRating(Double avgRating) { this.avgRating = avgRating; }
 
     public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
 
-    public String getHours() {
-        return hours;
-    }
-
-    public Double getAvgRating() {
-        return averageRating;
-    }
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 
     public List<String> getReviews() {
         return reviews;
@@ -58,8 +65,6 @@ public class Beach {
     public WeatherService getForecast() {
         return forecast;
     }
-
-    public String getBlurb() { return blurb; }
 
     public String getPicture() { return picture; }
 
@@ -88,6 +93,57 @@ public class Beach {
                 System.out.println("Error: " + task.getException());
             }
         });
+
+    // Parcelable implementation
+    protected Beach(Parcel in) {
+        name = in.readString();
+        blurb = in.readString();
+        hours = in.readString();
+        avgRating = (in.readByte() == 0) ? null : in.readDouble();
+        latitude = (in.readByte() == 0) ? null : in.readDouble();
+        longitude = (in.readByte() == 0) ? null : in.readDouble();
     }
 
+    public static final Creator<Beach> CREATOR = new Creator<Beach>() {
+        @Override
+        public Beach createFromParcel(Parcel in) {
+            return new Beach(in);
+        }
+
+        @Override
+        public Beach[] newArray(int size) {
+            return new Beach[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeString(blurb);
+        dest.writeString(hours);
+        if (avgRating == null) {
+            dest.writeByte((byte) 0);
+        } else {
+            dest.writeByte((byte) 1);
+            dest.writeDouble(avgRating);
+        }
+        if (latitude == null) {
+            dest.writeByte((byte) 0);
+        } else {
+            dest.writeByte((byte) 1);
+            dest.writeDouble(latitude);
+        }
+        if (longitude == null) {
+            dest.writeByte((byte) 0);
+        } else {
+            dest.writeByte((byte) 1);
+            dest.writeDouble(longitude);
+        }
+    }
 }
