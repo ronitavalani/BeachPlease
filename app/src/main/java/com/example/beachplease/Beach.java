@@ -14,7 +14,7 @@ public class Beach implements Parcelable {
     private Double longitude;
     private Double latitude;
     private String hours;
-    private Double averageRating;
+    private Double avgRating;
     private String picture;
     private List<String> reviews;
     private List<String> tags;
@@ -26,7 +26,7 @@ public class Beach implements Parcelable {
         this.longitude = longitude;
         this.latitude = latitude;
         this.hours = hours;
-        this.averageRating = averageRating;
+        this.avgRating = averageRating;
         this.picture = picture;
         this.blurb = blurb;
 
@@ -35,73 +35,64 @@ public class Beach implements Parcelable {
     }
 
     // Default constructor needed for Firebase
-    public Beach() {}
-
-    // Getters and setters
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-  
-    public String getBlurb() { return blurb; }
-    public void setBlurb(String blurb) { this.blurb = blurb; }
-
-    public String getHours() { return hours; }
-    public void setHours(String hours) { this.hours = hours; }
-
-    public Double getAvgRating() { return avgRating; }
-    public void setAvgRating(Double avgRating) { this.avgRating = avgRating; }
-
-    public Double getLatitude() { return latitude; }
-    public void setLatitude(Double latitude) { this.latitude = latitude; }
-
-    public Double getLongitude() { return longitude; }
-    public void setLongitude(Double longitude) { this.longitude = longitude; }
-
-    public List<String> getReviews() {
-        return reviews;
+    public Beach() {
     }
 
-    public List<String> getTags() {return tags;}
-
-    public WeatherService getForecast() {
-        return forecast;
-    }
-
-    public String getPicture() { return picture; }
-
-    public void addReview(String reviewId) {
-        reviews.add(reviewId);
-    }
-
-    public void addTag(String tag) {
-        tags.add(tag);
-    }
-
-    public void updateAvgRating(Double rating) {
-        int reviewNum = reviews.size();
-        double newAvg = ((averageRating * reviewNum) + rating)/(reviewNum + 1);
-        averageRating = newAvg;
-    }
-
-    public void addBeachToFirebase() {
-        DatabaseReference database = FirebaseDatabase.getInstance().getReference("beaches");
-        String key = name;
-        database.child(key).setValue(this).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                System.out.println("successful!");
-            }
-            else {
-                System.out.println("Error: " + task.getException());
-            }
-        });
-
-    // Parcelable implementation
     protected Beach(Parcel in) {
         name = in.readString();
-        blurb = in.readString();
+        if (in.readByte() == 0) {
+            longitude = null;
+        } else {
+            longitude = in.readDouble();
+        }
+        if (in.readByte() == 0) {
+            latitude = null;
+        } else {
+            latitude = in.readDouble();
+        }
         hours = in.readString();
-        avgRating = (in.readByte() == 0) ? null : in.readDouble();
-        latitude = (in.readByte() == 0) ? null : in.readDouble();
-        longitude = (in.readByte() == 0) ? null : in.readDouble();
+        if (in.readByte() == 0) {
+            avgRating = null;
+        } else {
+            avgRating = in.readDouble();
+        }
+        picture = in.readString();
+        reviews = in.createStringArrayList();
+        tags = in.createStringArrayList();
+        blurb = in.readString();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        if (longitude == null) {
+            dest.writeByte((byte) 0);
+        } else {
+            dest.writeByte((byte) 1);
+            dest.writeDouble(longitude);
+        }
+        if (latitude == null) {
+            dest.writeByte((byte) 0);
+        } else {
+            dest.writeByte((byte) 1);
+            dest.writeDouble(latitude);
+        }
+        dest.writeString(hours);
+        if (avgRating == null) {
+            dest.writeByte((byte) 0);
+        } else {
+            dest.writeByte((byte) 1);
+            dest.writeDouble(avgRating);
+        }
+        dest.writeString(picture);
+        dest.writeStringList(reviews);
+        dest.writeStringList(tags);
+        dest.writeString(blurb);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     public static final Creator<Beach> CREATOR = new Creator<Beach>() {
@@ -116,34 +107,94 @@ public class Beach implements Parcelable {
         }
     };
 
-    @Override
-    public int describeContents() {
-        return 0;
-
+    // Getters and setters
+    public String getName() {
+        return name;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(name);
-        dest.writeString(blurb);
-        dest.writeString(hours);
-        if (avgRating == null) {
-            dest.writeByte((byte) 0);
-        } else {
-            dest.writeByte((byte) 1);
-            dest.writeDouble(avgRating);
-        }
-        if (latitude == null) {
-            dest.writeByte((byte) 0);
-        } else {
-            dest.writeByte((byte) 1);
-            dest.writeDouble(latitude);
-        }
-        if (longitude == null) {
-            dest.writeByte((byte) 0);
-        } else {
-            dest.writeByte((byte) 1);
-            dest.writeDouble(longitude);
-        }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getBlurb() {
+        return blurb;
+    }
+
+    public void setBlurb(String blurb) {
+        this.blurb = blurb;
+    }
+
+    public String getHours() {
+        return hours;
+    }
+
+    public void setHours(String hours) {
+        this.hours = hours;
+    }
+
+    public Double getAvgRating() {
+        return avgRating;
+    }
+
+    public void setAvgRating(Double avgRating) {
+        this.avgRating = avgRating;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public List<String> getReviews() {
+        return reviews;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public WeatherService getForecast() {
+        return forecast;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public void addReview(String reviewId) {
+        reviews.add(reviewId);
+    }
+
+    public void addTag(String tag) {
+        tags.add(tag);
+    }
+
+    public void updateAvgRating(Double rating) {
+        int reviewNum = reviews.size();
+        double newAvg = ((avgRating * reviewNum) + rating) / (reviewNum + 1);
+        avgRating = newAvg;
+    }
+
+    public void addBeachToFirebase() {
+        DatabaseReference database = FirebaseDatabase.getInstance().getReference("beaches");
+        String key = name;
+        database.child(key).setValue(this).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                System.out.println("successful!");
+            } else {
+                System.out.println("Error: " + task.getException());
+            }
+        });
     }
 }
