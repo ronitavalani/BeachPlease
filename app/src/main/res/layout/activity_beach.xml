@@ -19,6 +19,27 @@
             android:contentDescription="Beach Image"
             android:src="@android:drawable/ic_menu_gallery"/>
 
+        <!-- Beach Name -->
+        <TextView
+            android:id="@+id/beachName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/blue_dark"
+            android:layout_marginBottom="8dp"
+            android:text="Beach Name" />
+
+        <!-- Beach Blurb -->
+        <TextView
+            android:id="@+id/beachBlurb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="@color/blue_hint"
+            android:layout_marginBottom="16dp"
+            android:text="Beach Description" />
+
         <!-- real time weather info displayed on page-->
         <TextView
             android:id="@+id/beachTimes"
