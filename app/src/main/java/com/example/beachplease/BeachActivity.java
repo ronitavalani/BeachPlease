@@ -1,9 +1,12 @@
 package com.example.beachplease;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.Date;
 
 public class BeachActivity extends AppCompatActivity {
 
@@ -26,9 +29,9 @@ public class BeachActivity extends AppCompatActivity {
 
     }
 
-    public void writeReview (String beachName, Double rating, Date date, User author, String comment) {
+    public void writeReview(String beachName, Double rating, Date date, User author, String comment) {
         Review newReview = new Review(beachName, rating, date, author, comment);
-        beach.updateAvgRating(rating);
+        //beach.updateAvgRating(rating);
         //beach.getReviews().add(newReview);
     }
 
@@ -64,6 +67,5 @@ public class BeachActivity extends AppCompatActivity {
             beachHours.setText("Hours: " + selectedBeach.getHours());
             reviewInfo.setText("Average Rating: " + (selectedBeach.getAvgRating() != null ? selectedBeach.getAvgRating() : "N/A"));
         }
-
     }
 }
