@@ -18,7 +18,26 @@ public class BeachActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beach);
 
-        Intent intent = getIntent();
+        // Retrieve the Beach object from the intent
+        Beach selectedBeach = getIntent().getParcelableExtra("selectedBeach");
+
+        // Initialize views
+        beachImage = findViewById(R.id.beachImage);
+        beachName = findViewById(R.id.beachName);
+        beachBlurb = findViewById(R.id.beachBlurb);
+        beachHours = findViewById(R.id.beachTimes);
+        weatherInfo = findViewById(R.id.weatherInfo);
+        reviewInfo = findViewById(R.id.review);
+        exampleTag = findViewById(R.id.exampleTag);
+        exampleReview = findViewById(R.id.exampleReview);
+
+        // Populate UI with Beach data
+        if (selectedBeach != null) {
+            beachName.setText(selectedBeach.getName());
+            beachBlurb.setText(selectedBeach.getBlurb());
+            beachHours.setText("Hours: " + selectedBeach.getHours());
+            reviewInfo.setText("Average Rating: " + (selectedBeach.getAvgRating() != null ? selectedBeach.getAvgRating() : "N/A"));
+        }
     }
 
     public void displayBeachInfo() {
@@ -46,26 +65,5 @@ public class BeachActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ProfileActivity.class);
         startActivity(intent);
         finish();
-
-        // Retrieve the Beach object from the intent
-        Beach selectedBeach = getIntent().getParcelableExtra("selectedBeach");
-
-        // Initialize views
-        beachImage = findViewById(R.id.beachImage);
-        beachName = findViewById(R.id.beachName);
-        beachBlurb = findViewById(R.id.beachBlurb);
-        beachHours = findViewById(R.id.beachTimes);
-        weatherInfo = findViewById(R.id.weatherInfo);
-        reviewInfo = findViewById(R.id.review);
-        exampleTag = findViewById(R.id.exampleTag);
-        exampleReview = findViewById(R.id.exampleReview);
-
-        // Populate UI with Beach data
-        if (selectedBeach != null) {
-            beachName.setText(selectedBeach.getName());
-            beachBlurb.setText(selectedBeach.getBlurb());
-            beachHours.setText("Hours: " + selectedBeach.getHours());
-            reviewInfo.setText("Average Rating: " + (selectedBeach.getAvgRating() != null ? selectedBeach.getAvgRating() : "N/A"));
-        }
     }
 }
