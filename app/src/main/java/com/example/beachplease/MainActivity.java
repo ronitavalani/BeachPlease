@@ -25,18 +25,20 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     private GoogleMap googleMap;
     private boolean[] selectedFilters;
     private String[] filterOptions = {
-            "Surf-Friendly", "Family-Friendly", "Pet-Friendly", "Picnic Areas", "Restrooms Available",
-            "Accessible Parking", "Lifeguard on Duty", "Calm Waters", "Water Sports", "Snorkeling",
-            "Fishing Allowed", "Shaded Areas", "BBQ/Picnic Grills", "Hiking Trails Nearby",
-            "Dunes and Nature Views", "Public Showers", "Nearby Food Vendors", "Bonfire-Friendly",
-            "Rocky Terrain", "Shell Collecting", "Tide Pools", "Secluded/Low Traffic", "Night Access",
-            "Scenic Views", "Wildlife Spotting", "Accessibility-Friendly"
+            "Surfing", "Family-Friendly", "Pet-Friendly", "Picnic Areas", "Restrooms Available",
+            "Beach Sports", "Shaded Areas", "Hiking Trails Nearby","Nearby Food Vendors", "Bonfire-Friendly",
+            "Scenic Views"
     };
+    private List<Marker> markers = new ArrayList<>();
+    private List<String> filters = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,13 +85,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void showFilterPopup() {
-        // Create an AlertDialog with a scrollable list of filters
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Filter Beaches")
                 .setMultiChoiceItems(filterOptions, selectedFilters, new DialogInterface.OnMultiChoiceClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                        selectedFilters[which] = isChecked; // Update the selected filters
+                        if (isChecked) {
+                            filters.add(filterOptions[which]);
+                        } else {
+                            filters.remove(filterOptions[which]);
+                            Log.d("Removing Filters", filters.toString());
+                        }
                     }
                 })
                 .setPositiveButton("Apply", new DialogInterface.OnClickListener() {
@@ -100,19 +106,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 })
                 .setNegativeButton("Cancel", null);
 
-        // Show the dialog without manually adding a ScrollView
         builder.create().show();
     }
 
     private void applyFilters() {
-        // Placeholder action to show selected filters
-        StringBuilder selected = new StringBuilder("Selected filters:\n");
-        for (int i = 0; i < filterOptions.length; i++) {
-            if (selectedFilters[i]) {
-                selected.append(filterOptions[i]).append("\n");
+        for (Marker marker : markers) {
+            if (marker.getTag() instanceof Beach) {
+                Beach beach = (Beach) marker.getTag();
+                boolean matchesFilters = false;
+                if(filters.isEmpty()) {
+                    matchesFilters = true;
+                }
+                if (beach.getTags() != null) { // Check if tags are not null
+                    Log.d("Beach Tag", beach.getName() + beach.getTags().toString());
+                    for (String filter : filters) {
+                        if (beach.getTags().contains(filter)) {
+                            matchesFilters = true;
+                            break;
+                        }
+                    }
+                }
+                marker.setVisible(matchesFilters);
             }
         }
-        Toast.makeText(this, selected.toString(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Filters Applied", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -199,6 +216,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 LatLng location = new LatLng(beach.getLatitude(), beach.getLongitude());
                                 Marker beachMarker = googleMap.addMarker(new MarkerOptions().position(location).title(beach.getName()));
                                 beachMarker.setTag(beach);
+                                markers.add(beachMarker);
                                 // Place the marker on the map
                             } else {
                                 Log.d("BeachData", "Beach object is null for snapshot: " + beachSnapshot.getKey());
