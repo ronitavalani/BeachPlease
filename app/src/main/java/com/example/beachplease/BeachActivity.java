@@ -3,15 +3,19 @@ package com.example.beachplease;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.bumptech.glide.Glide;
 
 import java.util.Date;
 
 public class BeachActivity extends AppCompatActivity {
 
     private ImageView beachImage;
-    private TextView beachName, beachBlurb, beachHours, weatherInfo, reviewInfo, exampleTag, exampleReview;
+    private TextView beachName, beachBlurb, beachHours, weatherInfo, reviewInfo, exampleReview;
+    private LinearLayout tagLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,8 +32,8 @@ public class BeachActivity extends AppCompatActivity {
         beachHours = findViewById(R.id.beachTimes);
         weatherInfo = findViewById(R.id.weatherInfo);
         reviewInfo = findViewById(R.id.review);
-        exampleTag = findViewById(R.id.exampleTag);
         exampleReview = findViewById(R.id.exampleReview);
+        tagLayout = findViewById(R.id.tagLayout);
 
         // Populate UI with Beach data
         if (selectedBeach != null) {
@@ -37,6 +41,16 @@ public class BeachActivity extends AppCompatActivity {
             beachBlurb.setText(selectedBeach.getBlurb());
             beachHours.setText("Hours: " + selectedBeach.getHours());
             reviewInfo.setText("Average Rating: " + (selectedBeach.getAvgRating() != null ? selectedBeach.getAvgRating() : "N/A"));
+            Glide.with(this).load(selectedBeach.getPicture()).into(beachImage);
+
+            for (String tag : selectedBeach.getTags()) {
+                TextView tagView = new TextView(this);
+                tagView.setText(tag);
+                tagView.setPadding(8, 4, 8, 4);
+                tagView.setTextSize(15);
+                tagView.setTextColor(getResources().getColor(R.color.black)); // Customize as needed
+                tagLayout.addView(tagView);
+            }
         }
     }
 
