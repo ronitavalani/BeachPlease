@@ -20,7 +20,7 @@ public class Beach implements Parcelable {
     private Double avgRating;
     private String picture;
     private Object reviews; // Accepts both List<String> or Map<String, Boolean> types
-    private Object tags; // Accepts both Map<String, Boolean> and List<String> types
+    private Map<String, Integer> tags; // Map of tag name to count
     private String blurb;
 
     public Beach(String name, Double longitude, Double latitude, String hours, Double averageRating, String picture, String blurb) {
@@ -56,13 +56,13 @@ public class Beach implements Parcelable {
         reviews = reviewsList;
 
         // Deserialize tags
-        List<String> tagsList = new ArrayList<>();
-        in.readList(tagsList, String.class.getClassLoader());
-        Map<String, Boolean> tagsMap = new HashMap<>();
-        for (String tag : tagsList) {
-            tagsMap.put(tag, true);
+        int tagCount = in.readInt();
+        tags = new HashMap<>();
+        for (int i = 0; i < tagCount; i++) {
+            String tag = in.readString();
+            int count = in.readInt();
+            tags.put(tag, count);
         }
-        tags = tagsMap;
     }
 
     @Override
@@ -82,11 +82,11 @@ public class Beach implements Parcelable {
             dest.writeList(new ArrayList<>(((Map<String, Boolean>) reviews).keySet()));
         }
 
-        // Serialize tags as a List<String>
-        if (tags instanceof Map) {
-            dest.writeList(new ArrayList<>(((Map<String, Boolean>) tags).keySet()));
-        } else if (tags instanceof List) {
-            dest.writeList((List<String>) tags);
+        // Serialize tags as a Map<String, Integer>
+        dest.writeInt(tags.size());
+        for (Map.Entry<String, Integer> entry : tags.entrySet()) {
+            dest.writeString(entry.getKey());
+            dest.writeInt(entry.getValue());
         }
     }
 
@@ -131,7 +131,6 @@ public class Beach implements Parcelable {
         return blurb;
     }
 
-    // Convert reviews to List<String>
     public List<String> getReviews() {
         if (reviews instanceof List) {
             return (List<String>) reviews;
@@ -141,14 +140,9 @@ public class Beach implements Parcelable {
         return new ArrayList<>();
     }
 
-    // Convert tags to List<String>
-    public List<String> getTags() {
-        if (tags instanceof List) {
-            return (List<String>) tags;
-        } else if (tags instanceof Map) {
-            return new ArrayList<>(((Map<String, Boolean>) tags).keySet());
-        }
-        return new ArrayList<>();
+    // Convert tags to Map<String, Integer>
+    public Map<String, Integer> getTags() {
+        return tags;
     }
 
     public void addReview(String reviewId) {
@@ -160,11 +154,7 @@ public class Beach implements Parcelable {
     }
 
     public void addTag(String tag) {
-        if (tags instanceof Map) {
-            ((Map<String, Boolean>) tags).put(tag, true);
-        } else if (tags instanceof List) {
-            ((List<String>) tags).add(tag);
-        }
+        tags.put(tag, tags.getOrDefault(tag, 0) + 1);
     }
 
     public void updateAvgRating(Double rating) {
@@ -188,4 +178,5 @@ public class Beach implements Parcelable {
         return 0;
     }
 }
+
 
