@@ -1,16 +1,33 @@
 package com.example.beachplease;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.GridLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RatingBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import android.os.StrictMode;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -20,6 +37,7 @@ import java.net.URL;
 import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import java.util.Date;
+import java.util.Locale;
 
 public class BeachActivity extends AppCompatActivity {
     private Beach beach;
@@ -35,6 +53,30 @@ public class BeachActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beach);
         Beach selectedBeach = getIntent().getParcelableExtra("selectedBeach");
+
+        ImageButton mapTab = findViewById(R.id.mapTab);
+        ImageButton profileTab = findViewById(R.id.profileTab);
+
+        // Handle Map Tab click
+        mapTab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Navigate to MainActivity
+                Intent intent = new Intent(BeachActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish(); // Optional: close BeachActivity if returning to MainActivity
+            }
+        });
+
+        // Handle Profile Tab click
+        profileTab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Navigate to ProfileActivity
+                Intent intent = new Intent(BeachActivity.this, ProfileActivity.class);
+                startActivity(intent);
+            }
+        });
 
         // Initialize views
         beachImage = findViewById(R.id.beachImage);
@@ -71,6 +113,14 @@ public class BeachActivity extends AppCompatActivity {
         double longitude = -118.5017;
 
         fetchWeatherData (latitude, longitude);
+
+        Button addReviewButton = findViewById(R.id.addReview);
+        addReviewButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAddReviewDialog(selectedBeach);
+            }
+        });
     }
 
     public void fetchWeatherData (double latitude, double longitude){
@@ -119,10 +169,104 @@ public class BeachActivity extends AppCompatActivity {
 
     }
 
-    public void writeReview(String beachName, Double rating, Date date, User author, String comment) {
-        Review newReview = new Review(beachName, rating, date, author, comment);
-        //beach.updateAvgRating(rating);
-        //beach.getReviews().add(newReview);
+    private void showAddReviewDialog(Beach selectedBeach) {
+        // Tags list
+        final String[] tags = {
+                "Surfing", "Family-Friendly", "Pet-Friendly", "Picnic Areas", "Restrooms Available",
+                "Beach Sports", "Shaded Areas", "Hiking Trails Nearby", "Nearby Food Vendors", "Bonfire-Friendly",
+                "Scenic Views"
+        };
+        final ArrayList<String> selectedTags = new ArrayList<>();
+
+        // Placeholder for author
+        final User author = new User("reneepan", "reneepan", "reneepan", "reneepan"); // Assuming a User class constructor
+
+        // Current date
+        final Date date = Calendar.getInstance().getTime();
+
+        // Create a dialog with input fields
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add a Review for " + selectedBeach.getName());
+
+        // Create a ScrollView to hold the form content
+        ScrollView scrollView = new ScrollView(this);
+
+        // Create a LinearLayout to hold the input fields within the ScrollView
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(20, 20, 20, 20);
+
+        // Input for review text
+        final EditText reviewInput = new EditText(this);
+        reviewInput.setHint("Write your review...");
+        layout.addView(reviewInput);
+
+        // Rating input
+        final RatingBar ratingBar = new RatingBar(this);
+        ratingBar.setNumStars(5);
+        ratingBar.setStepSize(0.5f);
+        layout.addView(ratingBar);
+
+        // Create a GridLayout for the tags to display them in two columns
+        GridLayout tagLayout = new GridLayout(this);
+        tagLayout.setColumnCount(2);
+        tagLayout.setPadding(10, 10, 10, 10);
+
+        // Add each tag as a CheckBox to the GridLayout
+        for (String tag : tags) {
+            CheckBox checkBox = new CheckBox(this);
+            checkBox.setText(tag);
+            checkBox.setTextSize(12); // Smaller text size for tags
+            checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    selectedTags.add(tag);
+                } else {
+                    selectedTags.remove(tag);
+                }
+            });
+            tagLayout.addView(checkBox);
+        }
+
+        // Add the GridLayout to the main layout
+        layout.addView(tagLayout);
+
+        // Add the layout to the ScrollView
+        scrollView.addView(layout);
+
+        // Set the ScrollView as the dialog view
+        builder.setView(scrollView);
+
+        // Set up the buttons
+        builder.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String reviewText = reviewInput.getText().toString();
+                Double rating = (double) ratingBar.getRating();
+
+                if (!reviewText.isEmpty() && rating > 0) {
+                    // Create a new review object
+                    Review newReview = new Review(
+                            selectedBeach.getName(),
+                            rating,
+                            date,
+                            author,
+                            reviewText,
+                            new ArrayList<>(selectedTags)
+                    );
+
+                    // Display confirmation and handle saving/displaying the review
+                    Toast.makeText(BeachActivity.this, "Review added!", Toast.LENGTH_SHORT).show();
+
+                    // Optionally update UI to reflect new review
+                    // updateReviewsUI(newReview);
+                } else {
+                    Toast.makeText(BeachActivity.this, "Please complete all review fields.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
     }
 
     //should this even be an option or should it just refresh the map?
