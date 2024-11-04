@@ -3,10 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="CoarseFineLocation">
 
+    <!-- Permissions for location and network access -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
         android:allowBackup="true"
@@ -18,6 +19,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BeachPlease"
         tools:targetApi="31">
+
+        <!-- Google Maps API Key Metadata -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDDczZ9-mTO_jHV1bL-2FW5o1r0kEe3Sbc"/>
 
         <!-- Main Activity -->
         <activity
@@ -40,12 +46,19 @@
         <activity
             android:name=".RegisterActivity"
             android:exported="true"
-            android:label="Profile" />
+            android:label="Register" />
 
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDDczZ9-mTO_jHV1bL-2FW5o1r0kEe3Sbc"/>
+        <!-- Login Activity -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true"
+            android:label="Login" />
+
+        <!-- Beach Activity -->
+        <activity
+            android:name=".BeachActivity"
+            android:exported="true"
+            android:label="Beach" />
 
     </application>
-
 </manifest>

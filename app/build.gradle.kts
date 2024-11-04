@@ -37,8 +37,6 @@ android {
 
 dependencies {
     implementation("com.google.firebase:firebase-database:21.0.0")
-    implementation(libs.flexbox)
-    implementation("com.google.android:flexbox:2.0.1")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.constraintlayout)
@@ -50,4 +48,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    implementation("com.github.bumptech.glide:glide:4.14.2")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.14.2")
 }

@@ -1,9 +1,15 @@
 package com.example.beachplease;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -11,8 +17,13 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import android.os.StrictMode;
 import android.util.Log;
 import android.widget.TextView;
@@ -22,16 +33,26 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
-
     private GoogleMap googleMap;
-    //private TextView liveWeatherInfo;
+    private boolean[] selectedFilters;
+    private String[] filterOptions = {
+            "Surfing", "Family-Friendly", "Pet-Friendly", "Picnic Areas", "Restrooms Available",
+            "Beach Sports", "Shaded Areas", "Hiking Trails Nearby","Nearby Food Vendors", "Bonfire-Friendly",
+            "Scenic Views"
+    };
+    private List<Marker> markers = new ArrayList<>();
+    private List<String> filters = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main); // Set the layout
+        setContentView(R.layout.activity_main);
+
+        selectedFilters = new boolean[filterOptions.length]; // Initialize the selection state array
 
         //liveWeatherInfo = findViewById(R.id.weatherInfo);
 
@@ -44,6 +65,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Setup navigation buttons
         ImageButton mapTab = findViewById(R.id.mapTab);
         ImageButton profileTab = findViewById(R.id.profileTab);
+        ImageButton filterButton = findViewById(R.id.filterButton);
+
+        // Filter Button Click Listener
+        filterButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showFilterPopup();
+            }
+        });
 
         // Handle Map Tab click
         mapTab.setOnClickListener(new View.OnClickListener() {
@@ -53,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        // Handle Profile Tab click - navigate to ProfileActivity
+        // Handle Profile Tab click
         profileTab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -63,13 +93,159 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
+    private void showFilterPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Filter Beaches")
+                .setMultiChoiceItems(filterOptions, selectedFilters, new DialogInterface.OnMultiChoiceClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                        if (isChecked) {
+                            filters.add(filterOptions[which]);
+                        } else {
+                            filters.remove(filterOptions[which]);
+                            Log.d("Removing Filters", filters.toString());
+                        }
+                    }
+                })
+                .setPositiveButton("Apply", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        applyFilters();
+                    }
+                })
+                .setNegativeButton("Cancel", null);
+
+        builder.create().show();
+    }
+
+    private void applyFilters() {
+        for (Marker marker : markers) {
+            if (marker.getTag() instanceof Beach) {
+                Beach beach = (Beach) marker.getTag();
+                boolean matchesFilters = false;
+                if(filters.isEmpty()) {
+                    matchesFilters = true;
+                }
+                if (beach.getTags() != null) { // Check if tags are not null
+                    Log.d("Beach Tag", beach.getName() + beach.getTags().toString());
+                    for (String filter : filters) {
+                        if (beach.getTags().contains(filter)) {
+                            matchesFilters = true;
+                            break;
+                        }
+                    }
+                }
+                marker.setVisible(matchesFilters);
+            }
+        }
+        Toast.makeText(this, "Filters Applied", Toast.LENGTH_SHORT).show();
+    }
+
     @Override
     public void onMapReady(@NonNull GoogleMap map) {
         googleMap = map;
 
-        // Set a default location and add a marker
         LatLng defaultLocation = new LatLng(34.0522, -118.2437); // Los Angeles coordinates
         googleMap.addMarker(new MarkerOptions().position(defaultLocation).title("Los Angeles"));
         googleMap.moveCamera(com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(defaultLocation, 10));
+
+        googleMap.setOnMarkerClickListener(this);
+        loadBeaches(map);
+    }
+
+    @Override
+    public boolean onMarkerClick(@NonNull Marker marker) {
+        if (marker.getTag() instanceof Beach) {
+            Beach selectedBeach = (Beach) marker.getTag();
+
+            // Show an alert dialog with beach details and "View" button
+            new AlertDialog.Builder(this)
+                    .setTitle(selectedBeach.getName())
+                    .setMessage("Would you like to view more details about " + selectedBeach.getName() + "?")
+                    .setPositiveButton("View", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Navigate to BeachActivity with the selected Beach object
+                            Intent intent = new Intent(MainActivity.this, BeachActivity.class);
+                            intent.putExtra("selectedBeach", selectedBeach);
+                            startActivity(intent);
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+
+            return true; // Return true to indicate we've handled the click
+        }
+        return false;
+    }
+
+    private void loadBeaches(GoogleMap map) {
+        Log.d("BeachData", "Loading all beaches from database");
+
+        FirebaseDatabase database;
+        try {
+            database = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/");
+            Log.d("BeachData", "Firebase instance obtained successfully");
+        } catch (Exception e) {
+            Log.e("BeachData", "Failed to get Firebase instance", e);
+            return;
+        }
+
+        DatabaseReference beachesRef = database.getReference("beaches");
+
+        // Add connection state listener
+        DatabaseReference connectedRef = database.getReference(".info/connected");
+        connectedRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                boolean connected = snapshot.getValue(Boolean.class);
+                Log.d("BeachData", "Firebase connection state: " + (connected ? "connected" : "disconnected"));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("BeachData", "Connection state listener cancelled", error.toException());
+            }
+        });
+
+        beachesRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Log.d("BeachData", "Data snapshot received for all beaches");
+                if (snapshot.exists() && snapshot.hasChildren()) {
+                    for (DataSnapshot beachSnapshot : snapshot.getChildren()) {
+                        try {
+                            Beach beach = beachSnapshot.getValue(Beach.class);
+                            if (beach != null) {
+                                Log.d("BeachData", "Beach object created: " + beach.getName());
+
+                                Log.d("BeachData", "Beach latitude created: " + beach.getLatitude());
+                                Log.d("BeachData", "Beach longitude created: " + beach.getLongitude());
+                                // Create a marker for the beach
+                                LatLng location = new LatLng(beach.getLatitude(), beach.getLongitude());
+                                Marker beachMarker = googleMap.addMarker(new MarkerOptions().position(location).title(beach.getName()));
+                                beachMarker.setTag(beach);
+                                markers.add(beachMarker);
+                                // Place the marker on the map
+                            } else {
+                                Log.d("BeachData", "Beach object is null for snapshot: " + beachSnapshot.getKey());
+                            }
+                        } catch (Exception e) {
+                            Log.e("BeachData", "Error converting snapshot to Beach object", e);
+                        }
+                    }
+                } else {
+                    Log.d("BeachData", "No beach data found in the database");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("BeachData", "Failed to retrieve beach data");
+                Log.e("BeachData", "Error Code: " + error.getCode());
+                Log.e("BeachData", "Error Message: " + error.getMessage());
+                Log.e("BeachData", "Error Details: " + error.getDetails());
+            }
+        });
     }
 }
