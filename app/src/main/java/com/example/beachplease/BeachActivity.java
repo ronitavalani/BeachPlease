@@ -96,14 +96,14 @@ public class BeachActivity extends AppCompatActivity {
 
                 JSONObject response = new JSONObject(content.toString());
                 JSONObject main = response.getJSONObject("main");
-                double temp = main.getDouble("temperature");
+                double temp = main.getDouble("temp");
                 int humidity = main.getInt("humidity");
                 JSONArray weatherInfoArray = response.getJSONArray("weather");
                 String weatherCondition = weatherInfoArray.getJSONObject(0).getString("description");
 
-                final String formattedWeatherInfo = "Temperature" + temp + "°F\n" + "Humidity: " + humidity + "%\n" + "Conditions: " + weatherCondition;
+                final String formattedWeatherInfo = "Temperature:" + temp + "°F\n" + "Humidity: " + humidity + "%\n" + "Conditions: " + weatherCondition;
 
-                runOnUiThread(()->liveWeatherInfo.setText(weatherCondition));
+                runOnUiThread(()->liveWeatherInfo.setText(formattedWeatherInfo));
             }
             catch (Exception e){
              Log.e("WeatherAPI", "Error displaying weather data", e);
