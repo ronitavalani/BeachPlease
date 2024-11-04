@@ -148,9 +148,28 @@ public class BeachActivity extends AppCompatActivity {
                 JSONArray weatherInfoArray = response.getJSONArray("weather");
                 String weatherCondition = weatherInfoArray.getJSONObject(0).getString("description");
 
-                final String formattedWeatherInfo = "Temperature: " + temp + "°F\n" + "Humidity: " + humidity + "%\n" + "Conditions: " + weatherCondition;
+                String formattedWeatherInfo = "Temperature: " + temp + "°F\n" + "Humidity: " + humidity + "%\n" + "Conditions: " + weatherCondition;
 
-                runOnUiThread(()->liveWeatherInfo.setText(formattedWeatherInfo));
+                //wave height
+                String waveURL = "https://marine-api.open-meteo.com/v1/marine?latitude=" +
+                        latitude + "&longitude=" + longitude + "&hourly=wave_height";
+                url = new URL(waveURL);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+
+                in = new BufferedReader(new InputStreamReader((urlConnection.getInputStream())));
+                content = new StringBuilder();
+                while ((input = in.readLine()) != null) {
+                    content.append(input);
+                }
+                in.close();
+                urlConnection.disconnect();
+
+                JSONObject waveResponse = new JSONObject(content.toString());
+                JSONArray waveHeights = waveResponse.getJSONObject("hourly").getJSONArray("wave_height");
+                double waveHeight = waveHeights.getDouble(0);
+                final String finalInfo = formattedWeatherInfo + "\nWave Height: " + waveHeight + " meters";
+                runOnUiThread(() -> liveWeatherInfo.setText(finalInfo));
 
                 //FOR WEATHER FORECAST
                 String forecastURL = "https://api.openweathermap.org/data/2.5/forecast?lat=" +
