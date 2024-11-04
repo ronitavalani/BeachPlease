@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (beach.getTags() != null) { // Check if tags are not null
                     Log.d("Beach Tag", beach.getName() + beach.getTags().toString());
                     for (String filter : filters) {
-                        if (beach.getTags().contains(filter)) {
+                        if (beach.getTags().containsKey(filter)) {
                             matchesFilters = true;
                             break;
                         }

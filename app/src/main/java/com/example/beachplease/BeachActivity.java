@@ -30,6 +30,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -42,9 +43,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class BeachActivity extends AppCompatActivity {
@@ -107,12 +110,25 @@ public class BeachActivity extends AppCompatActivity {
         reviewInfo.setText("Average Rating: " + (selectedBeach.getAvgRating() != null ? selectedBeach.getAvgRating() : "N/A"));
         Glide.with(this).load(selectedBeach.getPicture()).into(beachImage);
 
-        for (String tag : selectedBeach.getTags()) {
-            TextView tagView = new TextView(this);
-            tagView.setText(tag);
-            tagView.setPadding(8, 4, 8, 4);
-            tagView.setTextSize(15);
-            tagLayout.addView(tagView);
+        // Clear any existing tags from the layout
+        tagLayout.removeAllViews();
+
+        // Assuming getTags() now returns a Map<String, Integer> with tag names and counts
+        Map<String, Integer> tagsMap = selectedBeach.getTags();
+
+        if (tagsMap != null) {
+            for (Map.Entry<String, Integer> entry : tagsMap.entrySet()) {
+                String tagName = entry.getKey();
+                Integer tagCount = entry.getValue();
+
+                // Create and format the TextView for each tag with count
+                TextView tagView = new TextView(this);
+                tagView.setText(tagName);
+                tagView.setPadding(8, 4, 8, 4);
+                tagView.setTextSize(15);
+
+                tagLayout.addView(tagView); // Add to the layout
+            }
         }
     }
 
@@ -388,6 +404,7 @@ public class BeachActivity extends AppCompatActivity {
             databaseRef.child("reviews").child(reviewId).setValue(review).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     updateBeachReviewReference(selectedBeach, reviewId);
+                    updateBeachTags(selectedBeach, review.getTags());
                     updateUserReviewReference(user, reviewId);
                     Toast.makeText(BeachActivity.this, "Review added!", Toast.LENGTH_SHORT).show();
                 } else {
@@ -395,6 +412,40 @@ public class BeachActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private void updateBeachTags(Beach selectedBeach, List<String> newTags) {
+        DatabaseReference beachTagsRef = databaseRef.child("beaches").child(selectedBeach.getName()).child("tags");
+
+        beachTagsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // Create a map to hold updated tag counts
+                Map<String, Integer> tagsMap = new HashMap<>();
+
+                // Populate the map with existing tag counts from Firebase
+                if (snapshot.exists()) {
+                    for (DataSnapshot tagSnapshot : snapshot.getChildren()) {
+                        String tag = tagSnapshot.getKey();
+                        Integer count = tagSnapshot.getValue(Integer.class);
+                        tagsMap.put(tag, count != null ? count : 0);
+                    }
+                }
+
+                // Increment the count for each tag in newTags
+                for (String tag : newTags) {
+                    tagsMap.put(tag, tagsMap.getOrDefault(tag, 0) + 1);
+                }
+
+                // Push the updated tag count map back to Firebase
+                beachTagsRef.setValue(tagsMap);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(BeachActivity.this, "Failed to update beach tags.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void updateBeachReviewReference(Beach beach, String reviewId) {
