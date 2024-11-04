@@ -30,10 +30,6 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
 
         <!-- Profile Activity -->
@@ -52,7 +48,12 @@
         <activity
             android:name=".LoginActivity"
             android:exported="true"
-            android:label="Login" />
+            android:label="Login">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>/>
+        </activity>
 
         <!-- Beach Activity -->
         <activity
