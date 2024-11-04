@@ -24,12 +24,19 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
+import android.os.StrictMode;
+import android.util.Log;
+import android.widget.TextView;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
-
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap googleMap;
     private boolean[] selectedFilters;
     private String[] filterOptions = {
@@ -46,6 +53,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
 
         selectedFilters = new boolean[filterOptions.length]; // Initialize the selection state array
+
+        //liveWeatherInfo = findViewById(R.id.weatherInfo);
 
         // Initialize the SupportMapFragment and set the callback when the map is ready
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapView);
