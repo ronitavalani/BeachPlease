@@ -106,5 +106,3 @@ public class BeachActivity extends AppCompatActivity {
         finish();
     }
 }
-
-    }
