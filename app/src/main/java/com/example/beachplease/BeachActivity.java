@@ -52,6 +52,8 @@ public class BeachActivity extends AppCompatActivity {
     private ImageView beachImage;
     private TextView beachName, beachBlurb, beachHours, weatherInfo, reviewInfo, exampleReview;
     private LinearLayout tagLayout, reviewContainer;
+    private LinearLayout forecastLayout;
+    private LinearLayout tagLayout;
     private static final String API_KEY = "60656159d401dedb2ab28b487e8bd931";
     private DatabaseReference databaseRef;
     private Set<String> loadedReviewIds = new HashSet<>(); // Track loaded reviews
@@ -74,6 +76,7 @@ public class BeachActivity extends AppCompatActivity {
         weatherInfo = findViewById(R.id.weatherInfo);
         reviewInfo = findViewById(R.id.review);
         exampleReview = findViewById(R.id.exampleReview);
+        forecastLayout = findViewById(R.id.forecastLayout);
         tagLayout = findViewById(R.id.tagLayout);
         reviewContainer = findViewById(R.id.reviewContainer);
 
@@ -88,12 +91,11 @@ public class BeachActivity extends AppCompatActivity {
             addReviewListener(selectedBeach.getName()); // Listen for new reviews
         }
 
-        fetchWeatherData(34.0129, -118.5017);
-
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         Log.d("CurrentUser", currentUser.toString());
         String userId = currentUser != null ? currentUser.getUid() : "";
         Log.d("CurrentUser", userId);
+        fetchWeatherData(selectedBeach.getLatitude(), selectedBeach.getLongitude());
 
         Button addReviewButton = findViewById(R.id.addReview);
         addReviewButton.setOnClickListener(v -> showAddReviewDialog(selectedBeach, userId));
@@ -115,22 +117,25 @@ public class BeachActivity extends AppCompatActivity {
         }
     }
 
-    public void fetchWeatherData(double latitude, double longitude) {
-        new Thread(() -> {
-            try {
+    public void fetchWeatherData (double latitude, double longitude){
+        new Thread(() ->{
+            try{
+                //bc this is  long can make a separate function
                 String apiURL = "https://api.openweathermap.org/data/2.5/weather?lat=" +
-                        latitude + "&lon=" + longitude + "&appid=" + API_KEY + "&units=imperial";
-                HttpURLConnection urlConnection = (HttpURLConnection) new URL(apiURL).openConnection();
+                        latitude +"&lon="+longitude+"&appid="+API_KEY+"&units=imperial";
+                URL url = new URL(apiURL);
+                HttpURLConnection urlConnection =( HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
 
                 BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
                 StringBuilder content = new StringBuilder();
                 String input;
-                while ((input = in.readLine()) != null) {
+                while  ((input = in.readLine()) !=null){
                     content.append(input);
                 }
                 in.close();
                 urlConnection.disconnect();
+
 
                 JSONObject response = new JSONObject(content.toString());
                 JSONObject main = response.getJSONObject("main");
@@ -139,12 +144,86 @@ public class BeachActivity extends AppCompatActivity {
                 JSONArray weatherInfoArray = response.getJSONArray("weather");
                 String weatherCondition = weatherInfoArray.getJSONObject(0).getString("description");
 
-                final String formattedWeatherInfo = "Temperature: " + temp + "°F\n" + "Humidity: " + humidity + "%\n" + "Conditions: " + weatherCondition;
-                runOnUiThread(() -> weatherInfo.setText(formattedWeatherInfo));
-            } catch (Exception e) {
-                Log.e("WeatherAPI", "Error displaying weather data", e);
+                String formattedWeatherInfo = "Temperature: " + temp + "°F\n" + "Humidity: " + humidity + "%\n" + "Conditions: " + weatherCondition;
+
+                //wave height
+                String waveURL = "https://marine-api.open-meteo.com/v1/marine?latitude=" +
+                        latitude + "&longitude=" + longitude + "&hourly=wave_height";
+                url = new URL(waveURL);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+
+                in = new BufferedReader(new InputStreamReader((urlConnection.getInputStream())));
+                content = new StringBuilder();
+                while ((input = in.readLine()) != null) {
+                    content.append(input);
+                }
+                in.close();
+                urlConnection.disconnect();
+
+                JSONObject waveResponse = new JSONObject(content.toString());
+                JSONArray waveHeights = waveResponse.getJSONObject("hourly").getJSONArray("wave_height");
+                double waveHeight = waveHeights.getDouble(0);
+                final String finalInfo = formattedWeatherInfo + "\nWave Height: " + waveHeight + " meters";
+                runOnUiThread(() -> liveWeatherInfo.setText(finalInfo));
+
+                //FOR WEATHER FORECAST
+                String forecastURL = "https://api.openweathermap.org/data/2.5/forecast?lat=" +
+                        latitude + "&lon=" + longitude + "&appid=" + API_KEY + "&units=imperial";
+                url = new URL(forecastURL);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+
+                in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                content = new StringBuilder();
+                while ((input = in.readLine()) != null) {
+                    content.append(input);
+                }
+                in.close();
+                urlConnection.disconnect();
+
+                JSONObject forecastResponse = new JSONObject(content.toString());
+                JSONArray forecastList = forecastResponse.getJSONArray("list");
+                runOnUiThread(() -> forecastLayout.removeAllViews());
+
+                //display next 8 increments
+                SimpleDateFormat dateFormat = new SimpleDateFormat("h a", Locale.getDefault());
+                for (int i = 0; i < 8 && i < forecastList.length(); i++) {
+                    JSONObject forecast = forecastList.getJSONObject(i);
+                    JSONObject mainData = forecast.getJSONObject("main");
+                    double forecastTemp = mainData.getDouble("temp");
+
+                    long forecastTime = forecast.getLong("dt") * 1000;
+                    String formatTime = dateFormat.format(new Date(forecastTime));
+                    runOnUiThread(() -> {
+                        //container
+                        LinearLayout forecastItem = new LinearLayout(this);
+                        forecastItem.setOrientation(LinearLayout.VERTICAL);
+                        forecastItem.setPadding(16, 8, 16,8);
+
+                        //display time
+                        TextView timeTextView = new TextView(this);
+                        timeTextView.setText(formatTime);
+                        timeTextView.setTextSize(14);
+                        timeTextView.setTextColor(getResources().getColor(android.R.color.black));
+                        forecastItem.addView(timeTextView);
+
+                        //display temperature
+                        TextView tempTextView = new TextView(this);
+                        tempTextView.setText(String.format(Locale.getDefault(), "%.0f°F", forecastTemp));
+                        tempTextView.setTextSize(16);
+                        tempTextView.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
+                        forecastItem.addView(tempTextView);
+
+                        //add forecast item to the horizontal layout
+                        forecastLayout.addView(forecastItem);
+                    });
+                }
             }
-        }).start();
+            catch (Exception e){
+             Log.e("WeatherAPI", "Error displaying weather data", e);
+            }
+        } ).start();
     }
 
     private void displayReviews(String beachId) {
