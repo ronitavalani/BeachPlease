@@ -1,6 +1,7 @@
 package com.example.beachplease;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -8,6 +9,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -34,38 +37,38 @@ public class LoginActivity extends AppCompatActivity {
         Intent intent = getIntent();
     }
 
-    private void authenticateUser(String email, String password) {
-        //connect with database
-        Query query = reference.orderByChild("email").equalTo(email);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    for (DataSnapshot user : snapshot.getChildren()) {
-                        String dbPass = user.child("password").getValue(String.class);
-                        if (dbPass != null && dbPass.equals(password)) {
-                            Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            startActivity(intent);
-                            finish();
-                            return;
-                        }
-                        else {
-                            Toast.makeText(LoginActivity.this, "Incorrect password", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
-                else {
-                    Toast.makeText(LoginActivity.this, "User not found", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(LoginActivity.this, "Error logging in: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+//    private void authenticateUser(String email, String password) {
+//        //connect with database
+//        Query query = reference.orderByChild("email").equalTo(email);
+//        query.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                if (snapshot.exists()) {
+//                    for (DataSnapshot user : snapshot.getChildren()) {
+//                        String dbPass = user.child("password").getValue(String.class);
+//                        if (dbPass != null && dbPass.equals(password)) {
+//                            Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
+//                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+//                            startActivity(intent);
+//                            finish();
+//                            return;
+//                        }
+//                        else {
+//                            Toast.makeText(LoginActivity.this, "Incorrect password", Toast.LENGTH_SHORT).show();
+//                        }
+//                    }
+//                }
+//                else {
+//                    Toast.makeText(LoginActivity.this, "User not found", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {
+//                Toast.makeText(LoginActivity.this, "Error logging in: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
 
     public void registerClick(android.view.View view) {
         Intent intent = new Intent(this, RegisterActivity.class);
@@ -81,6 +84,25 @@ public class LoginActivity extends AppCompatActivity {
             Toast.makeText(this, "Please fill out all fields", Toast.LENGTH_SHORT).show();
             return;
         }
-        authenticateUser(email, password);
+
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+
+        auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                FirebaseUser user = auth.getCurrentUser();
+                if (user != null) {
+                    SharedPreferences prefs = getSharedPreferences("UserSession", MODE_PRIVATE);
+                    prefs.edit().putString("userId", user.getUid()).apply();
+
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+            }
+            else {
+                String errorMessage = "Login failed. Please try again.";
+                Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
