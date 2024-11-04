@@ -50,10 +50,9 @@ import java.util.Set;
 public class BeachActivity extends AppCompatActivity {
     private Beach beach;
     private ImageView beachImage;
-    private TextView beachName, beachBlurb, beachHours, weatherInfo, reviewInfo, exampleReview;
+    private TextView beachName, beachBlurb, beachHours, liveWeatherInfo, reviewInfo, exampleReview;
     private LinearLayout tagLayout, reviewContainer;
     private LinearLayout forecastLayout;
-    private LinearLayout tagLayout;
     private static final String API_KEY = "60656159d401dedb2ab28b487e8bd931";
     private DatabaseReference databaseRef;
     private Set<String> loadedReviewIds = new HashSet<>(); // Track loaded reviews
@@ -73,7 +72,7 @@ public class BeachActivity extends AppCompatActivity {
         beachName = findViewById(R.id.beachName);
         beachBlurb = findViewById(R.id.beachBlurb);
         beachHours = findViewById(R.id.beachTimes);
-        weatherInfo = findViewById(R.id.weatherInfo);
+        liveWeatherInfo = findViewById(R.id.weatherInfo);
         reviewInfo = findViewById(R.id.review);
         exampleReview = findViewById(R.id.exampleReview);
         forecastLayout = findViewById(R.id.forecastLayout);
@@ -120,7 +119,6 @@ public class BeachActivity extends AppCompatActivity {
     public void fetchWeatherData (double latitude, double longitude){
         new Thread(() ->{
             try{
-                //bc this is  long can make a separate function
                 String apiURL = "https://api.openweathermap.org/data/2.5/weather?lat=" +
                         latitude +"&lon="+longitude+"&appid="+API_KEY+"&units=imperial";
                 URL url = new URL(apiURL);
@@ -130,7 +128,7 @@ public class BeachActivity extends AppCompatActivity {
                 BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
                 StringBuilder content = new StringBuilder();
                 String input;
-                while  ((input = in.readLine()) !=null){
+                while((input = in.readLine()) !=null){
                     content.append(input);
                 }
                 in.close();
