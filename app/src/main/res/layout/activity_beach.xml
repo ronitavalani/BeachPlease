@@ -61,6 +61,30 @@ android:layout_height="match_parent">
                 android:text="Loading weather data..."
                 android:textSize="16sp"
                 android:textColor="@color/blue_hint"/>
+            <!-- Forecast Section for the next 6 hours -->
+            <TextView
+                android:id="@+id/forecastHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" Weather Forecast"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:id="@+id/forecastLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <!-- Forecast items will be added here dynamically -->
+                </LinearLayout>
+            </HorizontalScrollView>
 
             <!-- Label and container for dynamically loaded tags -->
             <LinearLayout
@@ -121,7 +145,7 @@ android:layout_height="match_parent">
             <Button
                 android:id="@+id/addReview"
                 android:layout_width="134dp"
-                android:layout_height="38dp"
+                android:layout_height="48dp"
                 android:layout_marginTop="10dp"
                 android:text="Add Review"
                 android:textSize="13sp" />

@@ -45,6 +45,7 @@ public class BeachActivity extends AppCompatActivity {
     private TextView liveWeatherInfo;
     private ImageView beachImage;
     private TextView beachName, beachBlurb, beachHours, weatherInfo, reviewInfo, exampleReview;
+    private LinearLayout forecastLayout;
     private LinearLayout tagLayout;
     private static final String API_KEY = "60656159d401dedb2ab28b487e8bd931";
 
@@ -86,6 +87,7 @@ public class BeachActivity extends AppCompatActivity {
         weatherInfo = findViewById(R.id.weatherInfo);
         reviewInfo = findViewById(R.id.review);
         exampleReview = findViewById(R.id.exampleReview);
+        forecastLayout = findViewById(R.id.forecastLayout);
         tagLayout = findViewById(R.id.tagLayout);
 
         // Populate UI with Beach data
@@ -108,11 +110,7 @@ public class BeachActivity extends AppCompatActivity {
       
         liveWeatherInfo = findViewById(R.id.weatherInfo);
 
-        //Latitude and longitude needs to be dynamic at some point (EXAMPLE FOR NOW)
-        double latitude = 34.0129;
-        double longitude = -118.5017;
-
-        fetchWeatherData (latitude, longitude);
+        fetchWeatherData(selectedBeach.getLatitude(), selectedBeach.getLongitude());
 
         Button addReviewButton = findViewById(R.id.addReview);
         addReviewButton.setOnClickListener(new View.OnClickListener() {
@@ -138,7 +136,6 @@ public class BeachActivity extends AppCompatActivity {
                 String input;
                 while  ((input = in.readLine()) !=null){
                     content.append(input);
-
                 }
                 in.close();
                 urlConnection.disconnect();
@@ -151,9 +148,62 @@ public class BeachActivity extends AppCompatActivity {
                 JSONArray weatherInfoArray = response.getJSONArray("weather");
                 String weatherCondition = weatherInfoArray.getJSONObject(0).getString("description");
 
-                final String formattedWeatherInfo = "Temperature:" + temp + "°F\n" + "Humidity: " + humidity + "%\n" + "Conditions: " + weatherCondition;
+                final String formattedWeatherInfo = "Temperature: " + temp + "°F\n" + "Humidity: " + humidity + "%\n" + "Conditions: " + weatherCondition;
 
                 runOnUiThread(()->liveWeatherInfo.setText(formattedWeatherInfo));
+
+                //FOR WEATHER FORECAST
+                String forecastURL = "https://api.openweathermap.org/data/2.5/forecast?lat=" +
+                        latitude + "&lon=" + longitude + "&appid=" + API_KEY + "&units=imperial";
+                url = new URL(forecastURL);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+
+                in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                content = new StringBuilder();
+                while ((input = in.readLine()) != null) {
+                    content.append(input);
+                }
+                in.close();
+                urlConnection.disconnect();
+
+                JSONObject forecastResponse = new JSONObject(content.toString());
+                JSONArray forecastList = forecastResponse.getJSONArray("list");
+                runOnUiThread(() -> forecastLayout.removeAllViews());
+
+                //display next 8 increments
+                SimpleDateFormat dateFormat = new SimpleDateFormat("h a", Locale.getDefault());
+                for (int i = 0; i < 8 && i < forecastList.length(); i++) {
+                    JSONObject forecast = forecastList.getJSONObject(i);
+                    JSONObject mainData = forecast.getJSONObject("main");
+                    double forecastTemp = mainData.getDouble("temp");
+
+                    long forecastTime = forecast.getLong("dt") * 1000;
+                    String formatTime = dateFormat.format(new Date(forecastTime));
+                    runOnUiThread(() -> {
+                        //container
+                        LinearLayout forecastItem = new LinearLayout(this);
+                        forecastItem.setOrientation(LinearLayout.VERTICAL);
+                        forecastItem.setPadding(16, 8, 16,8);
+
+                        //display time
+                        TextView timeTextView = new TextView(this);
+                        timeTextView.setText(formatTime);
+                        timeTextView.setTextSize(14);
+                        timeTextView.setTextColor(getResources().getColor(android.R.color.black));
+                        forecastItem.addView(timeTextView);
+
+                        //display temperature
+                        TextView tempTextView = new TextView(this);
+                        tempTextView.setText(String.format(Locale.getDefault(), "%.0f°F", forecastTemp));
+                        tempTextView.setTextSize(16);
+                        tempTextView.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
+                        forecastItem.addView(tempTextView);
+
+                        //add forecast item to the horizontal layout
+                        forecastLayout.addView(forecastItem);
+                    });
+                }
             }
             catch (Exception e){
              Log.e("WeatherAPI", "Error displaying weather data", e);
