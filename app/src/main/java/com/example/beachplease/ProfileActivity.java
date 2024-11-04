@@ -19,6 +19,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+
 public class ProfileActivity extends AppCompatActivity {
     private User user;
     private TextView userNameTextView;
@@ -34,18 +37,6 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
         Intent intent = getIntent();
 
-        ImageButton mapTab = findViewById(R.id.mapTab);
-
-        mapTab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Navigate to MainActivity
-                Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
-                startActivity(intent);
-                finish(); // Optional: close BeachActivity if returning to MainActivity
-            }
-        });
-        // Initialize UI elements
         userNameTextView = findViewById(R.id.user_name);
         userEmailTextView = findViewById(R.id.user_email);
         reviewsSection = findViewById(R.id.reviews_section);
@@ -64,6 +55,96 @@ public class ProfileActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
         }
+
+        reviewsSection = findViewById(R.id.reviews_section);
+        auth = FirebaseAuth.getInstance();
+        databaseRef = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/").getReference();
+
+        loadUserReviews();
+
+        findViewById(R.id.mapTab).setOnClickListener(v -> navigateTo(MainActivity.class));
+        findViewById(R.id.profileTab).setOnClickListener(v -> navigateTo(ProfileActivity.class));
+    }
+
+    private void loadUserReviews() {
+        // Get the user ID of the currently authenticated user
+        String userId = auth.getCurrentUser().getUid();
+
+        // Retrieve all reviews associated with the user
+        databaseRef.child("users").child(userId).child("reviews").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot reviewSnapshot : snapshot.getChildren()) {
+                    String reviewId = reviewSnapshot.getKey();
+                    loadReviewDetails(reviewId); // Load and display each review by ID
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(ProfileActivity.this, "Failed to load reviews.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadReviewDetails(String reviewId) {
+        // Fetch each review's details from Firebase
+        databaseRef.child("reviews").child(reviewId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Review review = snapshot.getValue(Review.class);
+                if (review != null) {
+                    displayReview(review); // Display the review in the UI
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(ProfileActivity.this, "Failed to load review details.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void displayReview(Review review) {
+        // Dynamically create a layout for each review
+        LinearLayout reviewLayout = new LinearLayout(this);
+        reviewLayout.setOrientation(LinearLayout.VERTICAL);
+        reviewLayout.setPadding(16, 16, 16, 16);
+
+        // Beach Name
+        TextView beachNameView = new TextView(this);
+        beachNameView.setText("Beach Name: " + review.getBeachName());
+        reviewLayout.addView(beachNameView);
+
+        // Date
+        TextView dateView = new TextView(this);
+        String formattedDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(review.getDate());
+        dateView.setText("Date: " + formattedDate);
+        reviewLayout.addView(dateView);
+
+        // Rating
+        TextView ratingView = new TextView(this);
+        ratingView.setText("Rating: " + review.getRating());
+        reviewLayout.addView(ratingView);
+
+        // Comment
+        TextView commentView = new TextView(this);
+        commentView.setText("Comment: " + review.getComment());
+        reviewLayout.addView(commentView);
+
+        // Tags
+        TextView tagsView = new TextView(this);
+        tagsView.setText("Tags: " + String.join(", ", review.getTags()));
+        reviewLayout.addView(tagsView);
+
+        // Add the review layout to the main reviews section
+        reviewsSection.addView(reviewLayout);
+    }
+
+    private void navigateTo(Class<?> targetActivity) {
+        Intent intent = new Intent(this, targetActivity);
+        startActivity(intent);
+        finish();
     }
 
     private void displayUserInfo(String userId) {

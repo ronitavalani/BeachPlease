@@ -61,27 +61,6 @@
         android:layout_above="@id/navigationBar"
         android:orientation="vertical"
         android:padding="16dp">
-
-        <!-- Example review item -->
-        <TextView
-            android:id="@+id/review_1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:background="#e0e0e0"
-            android:layout_marginBottom="8dp"
-            android:text="Review 1 content" />
-
-        <TextView
-            android:id="@+id/review_2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:background="#e0e0e0"
-            android:layout_marginBottom="8dp"
-            android:text="Review 2 content" />
-
-        <!-- Additional reviews will be programmatically added here or in ListView/RecyclerView in real implementation -->
     </LinearLayout>
 
     <!-- Navigation Bar -->

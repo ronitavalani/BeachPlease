@@ -1,13 +1,16 @@
 package com.example.beachplease;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Log;
+
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import android.os.Parcel;
-import android.os.Parcelable;
-
+import java.util.Map;
 
 public class Beach implements Parcelable {
     private String name;
@@ -16,9 +19,8 @@ public class Beach implements Parcelable {
     private String hours;
     private Double avgRating;
     private String picture;
-    private List<String> reviews;
-    private List<String> tags;
-    private WeatherService forecast;
+    private Object reviews; // Accepts both List<String> or Map<String, Boolean> types
+    private Object tags; // Accepts both Map<String, Boolean> and List<String> types
     private String blurb;
 
     public Beach(String name, Double longitude, Double latitude, String hours, Double averageRating, String picture, String blurb) {
@@ -29,70 +31,63 @@ public class Beach implements Parcelable {
         this.avgRating = averageRating;
         this.picture = picture;
         this.blurb = blurb;
-
         this.reviews = new ArrayList<>();
-        this.tags = new ArrayList<>();
+        this.tags = new HashMap<>();
     }
 
-    // Default constructor needed for Firebase
+    // Default constructor for Firebase
     public Beach() {
+        this.reviews = new ArrayList<>();
+        this.tags = new HashMap<>();
     }
 
     protected Beach(Parcel in) {
         name = in.readString();
-        if (in.readByte() == 0) {
-            longitude = null;
-        } else {
-            longitude = in.readDouble();
-        }
-        if (in.readByte() == 0) {
-            latitude = null;
-        } else {
-            latitude = in.readDouble();
-        }
+        longitude = (Double) in.readValue(Double.class.getClassLoader());
+        latitude = (Double) in.readValue(Double.class.getClassLoader());
         hours = in.readString();
-        if (in.readByte() == 0) {
-            avgRating = null;
-        } else {
-            avgRating = in.readDouble();
-        }
+        avgRating = (Double) in.readValue(Double.class.getClassLoader());
         picture = in.readString();
-        reviews = in.createStringArrayList();
-        tags = in.createStringArrayList();
         blurb = in.readString();
+
+        // Deserialize reviews
+        List<String> reviewsList = new ArrayList<>();
+        in.readList(reviewsList, String.class.getClassLoader());
+        reviews = reviewsList;
+
+        // Deserialize tags
+        List<String> tagsList = new ArrayList<>();
+        in.readList(tagsList, String.class.getClassLoader());
+        Map<String, Boolean> tagsMap = new HashMap<>();
+        for (String tag : tagsList) {
+            tagsMap.put(tag, true);
+        }
+        tags = tagsMap;
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(name);
-        if (longitude == null) {
-            dest.writeByte((byte) 0);
-        } else {
-            dest.writeByte((byte) 1);
-            dest.writeDouble(longitude);
-        }
-        if (latitude == null) {
-            dest.writeByte((byte) 0);
-        } else {
-            dest.writeByte((byte) 1);
-            dest.writeDouble(latitude);
-        }
+        dest.writeValue(longitude);
+        dest.writeValue(latitude);
         dest.writeString(hours);
-        if (avgRating == null) {
-            dest.writeByte((byte) 0);
-        } else {
-            dest.writeByte((byte) 1);
-            dest.writeDouble(avgRating);
-        }
+        dest.writeValue(avgRating);
         dest.writeString(picture);
-        dest.writeStringList(reviews);
-        dest.writeStringList(tags);
         dest.writeString(blurb);
-    }
 
-    @Override
-    public int describeContents() {
-        return 0;
+        // Serialize reviews as a List<String>
+        if (reviews instanceof List) {
+            dest.writeList((List<String>) reviews);
+        } else if (reviews instanceof Map) {
+            dest.writeList(new ArrayList<>(((Map<String, Boolean>) reviews).keySet()));
+        }
+
+        // Serialize tags as a List<String>
+        if (tags instanceof Map) {
+            dest.writeList(new ArrayList<>(((Map<String, Boolean>) tags).keySet()));
+        } else if (tags instanceof List) {
+            dest.writeList((List<String>) tags);
+        }
     }
 
     public static final Creator<Beach> CREATOR = new Creator<Beach>() {
@@ -112,89 +107,85 @@ public class Beach implements Parcelable {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getBlurb() {
-        return blurb;
-    }
-
-    public void setBlurb(String blurb) {
-        this.blurb = blurb;
-    }
-
-    public String getHours() {
-        return hours;
-    }
-
-    public void setHours(String hours) {
-        this.hours = hours;
-    }
-
-    public Double getAvgRating() {
-        return avgRating;
-    }
-
-    public void setAvgRating(Double avgRating) {
-        this.avgRating = avgRating;
+    public Double getLongitude() {
+        return longitude;
     }
 
     public Double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
+    public String getHours() {
+        return hours;
     }
 
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
-
-    public List<String> getReviews() {
-        return reviews;
-    }
-
-    public List<String> getTags() {
-        return tags;
-    }
-
-    public WeatherService getForecast() {
-        return forecast;
+    public Double getAvgRating() {
+        return avgRating;
     }
 
     public String getPicture() {
         return picture;
     }
 
+    public String getBlurb() {
+        return blurb;
+    }
+
+    // Convert reviews to List<String>
+    public List<String> getReviews() {
+        if (reviews instanceof List) {
+            return (List<String>) reviews;
+        } else if (reviews instanceof Map) {
+            return new ArrayList<>(((Map<String, Object>) reviews).keySet());
+        }
+        return new ArrayList<>();
+    }
+
+    // Convert tags to List<String>
+    public List<String> getTags() {
+        if (tags instanceof List) {
+            return (List<String>) tags;
+        } else if (tags instanceof Map) {
+            return new ArrayList<>(((Map<String, Boolean>) tags).keySet());
+        }
+        return new ArrayList<>();
+    }
+
     public void addReview(String reviewId) {
-        reviews.add(reviewId);
+        if (reviews instanceof List) {
+            ((List<String>) reviews).add(reviewId);
+        } else if (reviews instanceof Map) {
+            ((Map<String, Boolean>) reviews).put(reviewId, true);
+        }
     }
 
     public void addTag(String tag) {
-        tags.add(tag);
+        if (tags instanceof Map) {
+            ((Map<String, Boolean>) tags).put(tag, true);
+        } else if (tags instanceof List) {
+            ((List<String>) tags).add(tag);
+        }
     }
 
     public void updateAvgRating(Double rating) {
-        int reviewNum = reviews.size();
-        double newAvg = ((avgRating * reviewNum) + rating) / (reviewNum + 1);
-        avgRating = newAvg;
+        int reviewCount = getReviews().size();
+        avgRating = ((avgRating * reviewCount) + rating) / (reviewCount + 1);
     }
 
     public void addBeachToFirebase() {
         DatabaseReference database = FirebaseDatabase.getInstance().getReference("beaches");
-        String key = name;
-        database.child(key).setValue(this).addOnCompleteListener(task -> {
+        database.child(name).setValue(this).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                System.out.println("successful!");
+                Log.d("BeachData", "Beach added successfully!");
             } else {
-                System.out.println("Error: " + task.getException());
+                Log.e("BeachData", "Error adding beach: " + task.getException());
             }
         });
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
 }
+

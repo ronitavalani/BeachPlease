@@ -1,8 +1,11 @@
 package com.example.beachplease;
 
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -14,72 +17,58 @@ import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import android.os.StrictMode;
-import android.util.Log;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import androidx.appcompat.app.AppCompatActivity;
-import com.bumptech.glide.Glide;
-import java.util.Date;
 import java.util.Locale;
+import java.util.HashSet;
+import java.util.Set;
 
 public class BeachActivity extends AppCompatActivity {
     private Beach beach;
-    private User user;
-    private TextView liveWeatherInfo;
     private ImageView beachImage;
     private TextView beachName, beachBlurb, beachHours, weatherInfo, reviewInfo, exampleReview;
+    private LinearLayout tagLayout, reviewContainer;
     private LinearLayout forecastLayout;
     private LinearLayout tagLayout;
     private static final String API_KEY = "60656159d401dedb2ab28b487e8bd931";
+    private DatabaseReference databaseRef;
+    private Set<String> loadedReviewIds = new HashSet<>(); // Track loaded reviews
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beach);
+
         Beach selectedBeach = getIntent().getParcelableExtra("selectedBeach");
-
-        ImageButton mapTab = findViewById(R.id.mapTab);
-        ImageButton profileTab = findViewById(R.id.profileTab);
-
-        // Handle Map Tab click
-        mapTab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Navigate to MainActivity
-                Intent intent = new Intent(BeachActivity.this, MainActivity.class);
-                startActivity(intent);
-                finish(); // Optional: close BeachActivity if returning to MainActivity
-            }
-        });
-
-        // Handle Profile Tab click
-        profileTab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Navigate to ProfileActivity
-                Intent intent = new Intent(BeachActivity.this, ProfileActivity.class);
-                startActivity(intent);
-            }
-        });
+        databaseRef = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/").getReference();
 
         // Initialize views
+        ImageButton mapTab = findViewById(R.id.mapTab);
+        ImageButton profileTab = findViewById(R.id.profileTab);
         beachImage = findViewById(R.id.beachImage);
         beachName = findViewById(R.id.beachName);
         beachBlurb = findViewById(R.id.beachBlurb);
@@ -89,42 +78,49 @@ public class BeachActivity extends AppCompatActivity {
         exampleReview = findViewById(R.id.exampleReview);
         forecastLayout = findViewById(R.id.forecastLayout);
         tagLayout = findViewById(R.id.tagLayout);
+        reviewContainer = findViewById(R.id.reviewContainer);
+
+        // Set up navigation
+        mapTab.setOnClickListener(v -> navigateTo(MainActivity.class));
+        profileTab.setOnClickListener(v -> navigateTo(ProfileActivity.class));
 
         // Populate UI with Beach data
         if (selectedBeach != null) {
-            beachName.setText(selectedBeach.getName());
-            beachBlurb.setText(selectedBeach.getBlurb());
-            beachHours.setText("Hours: " + selectedBeach.getHours());
-            reviewInfo.setText("Average Rating: " + (selectedBeach.getAvgRating() != null ? selectedBeach.getAvgRating() : "N/A"));
-            Glide.with(this).load(selectedBeach.getPicture()).into(beachImage);
-
-            for (String tag : selectedBeach.getTags()) {
-                TextView tagView = new TextView(this);
-                tagView.setText(tag);
-                tagView.setPadding(8, 4, 8, 4);
-                tagView.setTextSize(15);
-                tagView.setTextColor(getResources().getColor(R.color.black)); // Customize as needed
-                tagLayout.addView(tagView);
-            }
+            populateBeachData(selectedBeach);
+            displayReviews(selectedBeach.getName()); // Load initial reviews
+            addReviewListener(selectedBeach.getName()); // Listen for new reviews
         }
-      
-        liveWeatherInfo = findViewById(R.id.weatherInfo);
 
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        Log.d("CurrentUser", currentUser.toString());
+        String userId = currentUser != null ? currentUser.getUid() : "";
+        Log.d("CurrentUser", userId);
         fetchWeatherData(selectedBeach.getLatitude(), selectedBeach.getLongitude());
 
         Button addReviewButton = findViewById(R.id.addReview);
-        addReviewButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showAddReviewDialog(selectedBeach);
-            }
-        });
+        addReviewButton.setOnClickListener(v -> showAddReviewDialog(selectedBeach, userId));
+    }
+
+    private void populateBeachData(Beach selectedBeach) {
+        beachName.setText(selectedBeach.getName());
+        beachBlurb.setText(selectedBeach.getBlurb());
+        beachHours.setText("Hours: " + selectedBeach.getHours());
+        reviewInfo.setText("Average Rating: " + (selectedBeach.getAvgRating() != null ? selectedBeach.getAvgRating() : "N/A"));
+        Glide.with(this).load(selectedBeach.getPicture()).into(beachImage);
+
+        for (String tag : selectedBeach.getTags()) {
+            TextView tagView = new TextView(this);
+            tagView.setText(tag);
+            tagView.setPadding(8, 4, 8, 4);
+            tagView.setTextSize(15);
+            tagLayout.addView(tagView);
+        }
     }
 
     public void fetchWeatherData (double latitude, double longitude){
         new Thread(() ->{
             try{
-                //bc this is  long can make a separate function
+                //bc this is  long can make a separate function
                 String apiURL = "https://api.openweathermap.org/data/2.5/weather?lat=" +
                         latitude +"&lon="+longitude+"&appid="+API_KEY+"&units=imperial";
                 URL url = new URL(apiURL);
@@ -134,7 +130,7 @@ public class BeachActivity extends AppCompatActivity {
                 BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
                 StringBuilder content = new StringBuilder();
                 String input;
-                while  ((input = in.readLine()) !=null){
+                while  ((input = in.readLine()) !=null){
                     content.append(input);
                 }
                 in.close();
@@ -230,62 +226,135 @@ public class BeachActivity extends AppCompatActivity {
         } ).start();
     }
 
-    public void displayBeachInfo() {
+    private void displayReviews(String beachId) {
+        reviewContainer.removeAllViews(); // Clear any existing reviews in the container
 
+        databaseRef.child("beaches").child(beachId).child("reviews").get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (DataSnapshot reviewIdSnapshot : task.getResult().getChildren()) {
+                    String reviewId = reviewIdSnapshot.getKey();
+                    if (!loadedReviewIds.contains(reviewId)) { // Check if already loaded
+                        loadedReviewIds.add(reviewId); // Mark as loaded
+                        fetchAndDisplayReview(reviewId);
+                    }
+                }
+            } else {
+                Toast.makeText(BeachActivity.this, "Failed to load reviews.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    public void displayReviews() {
+    private void addReviewListener(String beachId) {
+        databaseRef.child("beaches").child(beachId).child("reviews").addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, String previousChildName) {
+                String reviewId = snapshot.getKey();
+                if (!loadedReviewIds.contains(reviewId)) { // Only load new reviews
+                    loadedReviewIds.add(reviewId);
+                    fetchAndDisplayReview(reviewId);
+                }
+            }
 
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, String previousChildName) {}
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, String previousChildName) {}
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
     }
 
-    private void showAddReviewDialog(Beach selectedBeach) {
-        // Tags list
+    private void fetchAndDisplayReview(String reviewId) {
+        databaseRef.child("reviews").child(reviewId).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                Review review = task.getResult().getValue(Review.class);
+                if (review != null) {
+                    fetchAuthorDetails(review.getAuthor(), review);
+                }
+            } else {
+                Toast.makeText(BeachActivity.this, "Failed to retrieve review details.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void fetchAuthorDetails(String authorId, Review review) {
+        databaseRef.child("users").child(authorId).child("name").get().addOnCompleteListener(task -> {
+            String username = task.isSuccessful() && task.getResult().exists() ? task.getResult().getValue(String.class) : "Unknown User";
+            addReviewView(review, username);
+        });
+    }
+
+    @SuppressLint("ResourceAsColor")
+    private void addReviewView(Review review, String username) {
+        LinearLayout reviewLayout = new LinearLayout(this);
+        reviewLayout.setOrientation(LinearLayout.VERTICAL);
+        reviewLayout.setPadding(16, 16, 16, 16);
+
+        TextView reviewAuthor = new TextView(this);
+        reviewAuthor.setText("Author: " + username);
+
+        TextView reviewDate = new TextView(this);
+        reviewDate.setText("Date: " + new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(review.getDate()));
+
+        TextView reviewRating = new TextView(this);
+        reviewRating.setText("Rating: " + review.getRating());
+
+        TextView reviewText = new TextView(this);
+        reviewText.setText(review.getComment());
+
+        TextView reviewTags = new TextView(this);
+        reviewTags.setText("Tags: " + String.join(", ", review.getTags()));
+
+        reviewLayout.addView(reviewAuthor);
+        reviewLayout.addView(reviewDate);
+        reviewLayout.addView(reviewRating);
+        reviewLayout.addView(reviewText);
+        reviewLayout.addView(reviewTags);
+
+        View divider = new View(this);
+        divider.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2));
+        divider.setBackgroundColor(android.R.color.darker_gray);
+
+        reviewContainer.addView(reviewLayout);
+        reviewContainer.addView(divider);
+    }
+
+    private void showAddReviewDialog(Beach selectedBeach, String user) {
         final String[] tags = {
                 "Surfing", "Family-Friendly", "Pet-Friendly", "Picnic Areas", "Restrooms Available",
                 "Beach Sports", "Shaded Areas", "Hiking Trails Nearby", "Nearby Food Vendors", "Bonfire-Friendly",
                 "Scenic Views"
         };
         final ArrayList<String> selectedTags = new ArrayList<>();
-
-        // Placeholder for author
-        final User author = new User("reneepan", "reneepan", "reneepan", "reneepan"); // Assuming a User class constructor
-
-        // Current date
         final Date date = Calendar.getInstance().getTime();
 
-        // Create a dialog with input fields
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add a Review for " + selectedBeach.getName());
 
-        // Create a ScrollView to hold the form content
         ScrollView scrollView = new ScrollView(this);
-
-        // Create a LinearLayout to hold the input fields within the ScrollView
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(20, 20, 20, 20);
 
-        // Input for review text
         final EditText reviewInput = new EditText(this);
         reviewInput.setHint("Write your review...");
         layout.addView(reviewInput);
 
-        // Rating input
         final RatingBar ratingBar = new RatingBar(this);
         ratingBar.setNumStars(5);
         ratingBar.setStepSize(0.5f);
         layout.addView(ratingBar);
 
-        // Create a GridLayout for the tags to display them in two columns
         GridLayout tagLayout = new GridLayout(this);
         tagLayout.setColumnCount(2);
         tagLayout.setPadding(10, 10, 10, 10);
 
-        // Add each tag as a CheckBox to the GridLayout
         for (String tag : tags) {
             CheckBox checkBox = new CheckBox(this);
             checkBox.setText(tag);
-            checkBox.setTextSize(12); // Smaller text size for tags
+            checkBox.setTextSize(12);
             checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
                     selectedTags.add(tag);
@@ -295,58 +364,51 @@ public class BeachActivity extends AppCompatActivity {
             });
             tagLayout.addView(checkBox);
         }
-
-        // Add the GridLayout to the main layout
         layout.addView(tagLayout);
-
-        // Add the layout to the ScrollView
         scrollView.addView(layout);
-
-        // Set the ScrollView as the dialog view
         builder.setView(scrollView);
 
-        // Set up the buttons
-        builder.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String reviewText = reviewInput.getText().toString();
-                Double rating = (double) ratingBar.getRating();
+        builder.setPositiveButton("Submit", (dialog, which) -> {
+            String reviewText = reviewInput.getText().toString();
+            Double rating = (double) ratingBar.getRating();
 
-                if (!reviewText.isEmpty() && rating > 0) {
-                    // Create a new review object
-                    Review newReview = new Review(
-                            selectedBeach.getName(),
-                            rating,
-                            date,
-                            author,
-                            reviewText,
-                            new ArrayList<>(selectedTags)
-                    );
-
-                    // Display confirmation and handle saving/displaying the review
-                    Toast.makeText(BeachActivity.this, "Review added!", Toast.LENGTH_SHORT).show();
-
-                    // Optionally update UI to reflect new review
-                    // updateReviewsUI(newReview);
-                } else {
-                    Toast.makeText(BeachActivity.this, "Please complete all review fields.", Toast.LENGTH_SHORT).show();
-                }
+            if (!reviewText.isEmpty() && rating > 0) {
+                Review newReview = new Review(selectedBeach.getName(), rating, date, user, reviewText, new ArrayList<>(selectedTags));
+                saveReviewToFirebase(selectedBeach, user, newReview);
+            } else {
+                Toast.makeText(BeachActivity.this, "Please complete all review fields.", Toast.LENGTH_SHORT).show();
             }
         });
-
         builder.setNegativeButton("Cancel", null);
         builder.show();
     }
 
-    //should this even be an option or should it just refresh the map?
-    public void mapClick(android.view.View view) {
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-        finish();
+    private void saveReviewToFirebase(Beach selectedBeach, String user, Review review) {
+        String reviewId = databaseRef.child("reviews").push().getKey();
+
+        if (reviewId != null) {
+            databaseRef.child("reviews").child(reviewId).setValue(review).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    updateBeachReviewReference(selectedBeach, reviewId);
+                    updateUserReviewReference(user, reviewId);
+                    Toast.makeText(BeachActivity.this, "Review added!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(BeachActivity.this, "Failed to save review.", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
-    public void profileClick(android.view.View view) {
-        Intent intent = new Intent(this, ProfileActivity.class);
+    private void updateBeachReviewReference(Beach beach, String reviewId) {
+        databaseRef.child("beaches").child(beach.getName()).child("reviews").child(reviewId).setValue(true);
+    }
+
+    private void updateUserReviewReference(String user, String reviewId) {
+        databaseRef.child("users").child(user).child("reviews").child(reviewId).setValue(true);
+    }
+
+    private void navigateTo(Class<?> targetActivity) {
+        Intent intent = new Intent(this, targetActivity);
         startActivity(intent);
         finish();
     }
