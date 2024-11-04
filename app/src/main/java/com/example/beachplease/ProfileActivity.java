@@ -14,6 +14,19 @@ public class ProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
         Intent intent = getIntent();
+
+        ImageButton mapTab = findViewById(R.id.mapTab);
+
+        mapTab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Navigate to MainActivity
+                Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish(); // Optional: close BeachActivity if returning to MainActivity
+            }
+        });
+
     }
 
     private void getUserInfo() {
