@@ -110,29 +110,73 @@ public class BeachActivity extends AppCompatActivity {
         reviewInfo.setText("Average Rating: " + (selectedBeach.getAvgRating() != null ? selectedBeach.getAvgRating() : "N/A"));
         Glide.with(this).load(selectedBeach.getPicture()).into(beachImage);
 
-        // Clear any existing tags
-        tagLayout.removeAllViews();
+        displayTags(selectedBeach);
 
         // Retrieve the tags map and display each with a bullet point
-        Map<String, Integer> tagsMap = selectedBeach.getTags();
-        if (tagsMap != null) {
-            for (Map.Entry<String, Integer> entry : tagsMap.entrySet()) {
-                String tagName = entry.getKey();
-                Integer tagCount = entry.getValue();
-
-                // Create a TextView for each tag with a bullet
-                TextView tagView = new TextView(this);
-                tagView.setText("\u2022 " + tagName + " (" + tagCount + ")");
-                tagView.setTextSize(15);
-                tagView.setTextColor(getResources().getColor(R.color.blue_hint));
-                tagView.setPadding(0, 4, 0, 4); // Adds spacing between each tag item
-
-                tagLayout.addView(tagView);
-            }
-        }
+//        Map<String, Integer> tagsMap = selectedBeach.getTags();
+//        if (tagsMap != null) {
+//            for (Map.Entry<String, Integer> entry : tagsMap.entrySet()) {
+//                String tagName = entry.getKey();
+//                Integer tagCount = entry.getValue();
+//
+//                // Create a TextView for each tag with a bullet
+//                TextView tagView = new TextView(this);
+//                tagView.setText("\u2022 " + tagName + " (" + tagCount + ")");
+//                tagView.setTextSize(15);
+//                tagView.setTextColor(getResources().getColor(R.color.blue_hint));
+//                tagView.setPadding(0, 4, 0, 4); // Adds spacing between each tag item
+//
+//                tagLayout.addView(tagView);
+//            }
+//        }
     }
 
-    public void fetchWeatherData (double latitude, double longitude){
+    private void displayTags(Beach selectedBeach) {
+        DatabaseReference tagsRef = databaseRef.child("beaches").child(selectedBeach.getName()).child("tags");
+
+        tagsRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                Map<String, Integer> tagCounts = new HashMap<>();
+
+                // Populate tagCounts with the latest data from Firebase
+                for (DataSnapshot tagSnapshot : task.getResult().getChildren()) {
+                    String tag = tagSnapshot.getKey();
+                    Integer count = tagSnapshot.getValue(Integer.class);
+                    if (tag != null && count != null) {
+                        tagCounts.put(tag, count);
+                    }
+                }
+
+                // Sort tags by frequency and alphabetically as a tiebreaker
+                List<Map.Entry<String, Integer>> sortedTags = new ArrayList<>(tagCounts.entrySet());
+                sortedTags.sort((entry1, entry2) -> {
+                    int frequencyComparison = entry2.getValue().compareTo(entry1.getValue()); // Descending frequency
+                    return frequencyComparison != 0 ? frequencyComparison : entry1.getKey().compareTo(entry2.getKey()); // Alphabetical tie-breaker
+                });
+
+                // Select the top two tags
+                List<String> topTags = new ArrayList<>();
+                for (int i = 0; i < Math.min(2, sortedTags.size()); i++) {
+                    topTags.add(sortedTags.get(i).getKey());
+                }
+
+                // Clear the existing tags in the layout and display the top two
+                tagLayout.removeAllViews();
+                for (String tag : topTags) {
+                    TextView tagView = new TextView(this);
+                    tagView.setText("\u2022 " + tag);
+                    tagView.setTextSize(15);
+                    tagView.setTextColor(getResources().getColor(R.color.blue_hint));
+                    tagView.setPadding(0, 4, 0, 4); // Adds spacing between each tag item
+                    tagLayout.addView(tagView);
+                }
+            } else {
+                Toast.makeText(BeachActivity.this, "Failed to load tags.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void fetchWeatherData (double latitude, double longitude){
         new Thread(() ->{
             try{
                 String apiURL = "https://api.openweathermap.org/data/2.5/weather?lat=" +
@@ -462,6 +506,7 @@ public class BeachActivity extends AppCompatActivity {
 
                 // Push the updated tag count map back to Firebase
                 beachTagsRef.setValue(tagsMap);
+                displayTags(selectedBeach);
             }
 
             @Override

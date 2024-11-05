@@ -248,10 +248,12 @@ public class ProfileActivity extends AppCompatActivity {
         builder.setTitle("Delete Review")
                 .setMessage("Are you sure you want to delete this review?")
                 .setPositiveButton("Yes", (dialog, which) -> {
-                    databaseRef.child("reviews").child(reviewId).get().addOnCompleteListener(task -> {
+                    DatabaseReference reviewRef = databaseRef.child("reviews").child(reviewId);
+                    reviewRef.get().addOnCompleteListener(task -> {
                         if (task.isSuccessful() && task.getResult().exists()) {
                             double deletedRating = task.getResult().child("rating").getValue(Double.class);
-
+                            Review review = task.getResult().getValue(Review.class);
+                            Set<String> tagsToRemove = new HashSet<>(review.getTags() != null ? review.getTags() : new ArrayList<>());
                             databaseRef.child("reviews").child(reviewId).removeValue().addOnCompleteListener(deleteTask -> {
                                 if (deleteTask.isSuccessful()) {
                                     String userId = auth.getCurrentUser().getUid();
@@ -262,6 +264,7 @@ public class ProfileActivity extends AppCompatActivity {
                                     reviewsSection.removeAllViews();
                                     loadUserReviews(userId);
 
+                                    updateBeachTags(beachName, tagsToRemove, new HashSet<>());
                                     updateDeletedRating(beachName, deletedRating); // Update rating after delete
                                 } else {
                                     Toast.makeText(ProfileActivity.this, "Failed to delete review.", Toast.LENGTH_SHORT).show();
