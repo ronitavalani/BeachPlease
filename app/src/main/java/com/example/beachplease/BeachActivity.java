@@ -2,7 +2,6 @@ package com.example.beachplease;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -51,7 +50,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class BeachActivity extends AppCompatActivity {
-    private Beach beach;
     private ImageView beachImage;
     private TextView beachName, beachBlurb, beachHours, liveWeatherInfo, reviewInfo, exampleReview;
     private LinearLayout tagLayout, reviewContainer;
@@ -111,24 +109,6 @@ public class BeachActivity extends AppCompatActivity {
         Glide.with(this).load(selectedBeach.getPicture()).into(beachImage);
 
         displayTags(selectedBeach);
-
-        // Retrieve the tags map and display each with a bullet point
-//        Map<String, Integer> tagsMap = selectedBeach.getTags();
-//        if (tagsMap != null) {
-//            for (Map.Entry<String, Integer> entry : tagsMap.entrySet()) {
-//                String tagName = entry.getKey();
-//                Integer tagCount = entry.getValue();
-//
-//                // Create a TextView for each tag with a bullet
-//                TextView tagView = new TextView(this);
-//                tagView.setText("\u2022 " + tagName + " (" + tagCount + ")");
-//                tagView.setTextSize(15);
-//                tagView.setTextColor(getResources().getColor(R.color.blue_hint));
-//                tagView.setPadding(0, 4, 0, 4); // Adds spacing between each tag item
-//
-//                tagLayout.addView(tagView);
-//            }
-//        }
     }
 
     private void displayTags(Beach selectedBeach) {
@@ -171,7 +151,11 @@ public class BeachActivity extends AppCompatActivity {
                     tagLayout.addView(tagView);
                 }
             } else {
-                Toast.makeText(BeachActivity.this, "Failed to load tags.", Toast.LENGTH_SHORT).show();
+                TextView noTagsView = new TextView(this);
+                noTagsView.setText("There are no tags.");
+                noTagsView.setTextSize(15);
+                noTagsView.setTextColor(getResources().getColor(R.color.blue_hint));
+                tagLayout.addView(noTagsView);
             }
         });
     }
