@@ -3,6 +3,7 @@ package com.example.beachplease;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -28,11 +29,11 @@ import com.google.firebase.database.ValueEventListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
 public class ProfileActivity extends AppCompatActivity {
-    private User user;
     private TextView userNameTextView;
     private TextView userEmailTextView;
     private LinearLayout reviewsSection;
@@ -123,7 +124,8 @@ public class ProfileActivity extends AppCompatActivity {
         reviewLayout.addView(commentView);
 
         TextView tagsView = new TextView(this);
-        tagsView.setText("Tags: " + String.join(", ", review.getTags()));
+        List<String> tags = review.getTags() != null ? review.getTags() : new ArrayList<>();
+        tagsView.setText("Tags: " + String.join(", ", tags));
         reviewLayout.addView(tagsView);
 
         // Buttons layout for Edit and Delete buttons
@@ -172,8 +174,11 @@ public class ProfileActivity extends AppCompatActivity {
                 "Beach Sports", "Shaded Areas", "Hiking Trails Nearby", "Nearby Food Vendors", "Bonfire-Friendly",
                 "Scenic Views"
         };
-        final ArrayList<String> selectedTags = new ArrayList<>(review.getTags());
-        final Set<String> originalTags = new HashSet<>(review.getTags());
+
+        // Ensure tags are not null before initializing selectedTags and originalTags
+        final List<String> existingTags = review.getTags() != null ? review.getTags() : new ArrayList<>();
+        final ArrayList<String> selectedTags = new ArrayList<>(existingTags);
+        final Set<String> originalTags = new HashSet<>(existingTags);
 
         GridLayout tagLayout = new GridLayout(this);
         tagLayout.setColumnCount(2);
@@ -199,7 +204,8 @@ public class ProfileActivity extends AppCompatActivity {
 
         builder.setPositiveButton("Save", (dialog, which) -> {
             String updatedComment = reviewInput.getText().toString();
-            Double updatedRating = (double) ratingBar.getRating();
+            double updatedRating = (double) ratingBar.getRating();
+            double oldRating = review.getRating(); // Store old rating
 
             // Update review object with new data
             review.setComment(updatedComment);
@@ -208,13 +214,14 @@ public class ProfileActivity extends AppCompatActivity {
 
             // Calculate tags that were deselected and newly selected
             Set<String> deselectedTags = new HashSet<>(originalTags);
-            deselectedTags.removeAll(selectedTags); // Tags that were in original but not in updated tags
+            deselectedTags.removeAll(selectedTags);
 
             Set<String> newTags = new HashSet<>(selectedTags);
-            newTags.removeAll(originalTags); // Tags that are new in the updated list
+            newTags.removeAll(originalTags);
 
-            // Update Firebase with the edited review and update tags
+            // Update Firebase with the edited review, update tags, and rating
             updateReviewInFirebase(reviewId, review, deselectedTags, newTags, review.getBeachName());
+            updateEditedRating(review.getBeachName(), oldRating, updatedRating); // Update rating with old and new ratings
         });
         builder.setNegativeButton("Cancel", null);
         builder.show();
@@ -241,29 +248,32 @@ public class ProfileActivity extends AppCompatActivity {
         builder.setTitle("Delete Review")
                 .setMessage("Are you sure you want to delete this review?")
                 .setPositiveButton("Yes", (dialog, which) -> {
-                    // Remove review from /reviews
-                    databaseRef.child("reviews").child(reviewId).removeValue().addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            // Remove review reference from user's reviews
-                            String userId = auth.getCurrentUser().getUid();
-                            databaseRef.child("users").child(userId).child("reviews").child(reviewId).removeValue();
+                    databaseRef.child("reviews").child(reviewId).get().addOnCompleteListener(task -> {
+                        if (task.isSuccessful() && task.getResult().exists()) {
+                            double deletedRating = task.getResult().child("rating").getValue(Double.class);
 
-                            // Remove review reference from beach's reviews
-                            databaseRef.child("beaches").child(beachName).child("reviews").child(reviewId).removeValue();
+                            databaseRef.child("reviews").child(reviewId).removeValue().addOnCompleteListener(deleteTask -> {
+                                if (deleteTask.isSuccessful()) {
+                                    String userId = auth.getCurrentUser().getUid();
+                                    databaseRef.child("users").child(userId).child("reviews").child(reviewId).removeValue();
+                                    databaseRef.child("beaches").child(beachName).child("reviews").child(reviewId).removeValue();
 
-                            Toast.makeText(ProfileActivity.this, "Review deleted successfully!", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(ProfileActivity.this, "Review deleted successfully!", Toast.LENGTH_SHORT).show();
+                                    reviewsSection.removeAllViews();
+                                    loadUserReviews(userId);
 
-                            // Refresh UI by clearing and reloading reviews
-                            reviewsSection.removeAllViews();
-                            loadUserReviews(userId);
-                        } else {
-                            Toast.makeText(ProfileActivity.this, "Failed to delete review.", Toast.LENGTH_SHORT).show();
+                                    updateDeletedRating(beachName, deletedRating); // Update rating after delete
+                                } else {
+                                    Toast.makeText(ProfileActivity.this, "Failed to delete review.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         }
                     });
                 })
                 .setNegativeButton("No", null)
                 .show();
     }
+
 
     private void updateBeachTags(String beachName, Set<String> deselectedTags, Set<String> newTags) {
         DatabaseReference beachTagsRef = databaseRef.child("beaches").child(beachName).child("tags");
@@ -306,6 +316,58 @@ public class ProfileActivity extends AppCompatActivity {
             });
         }
     }
+
+    private void updateEditedRating(String beachName, double oldRating, double newRating) {
+        DatabaseReference beachRef = databaseRef.child("beaches").child(beachName);
+
+        beachRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                double currAvgRating = task.getResult().child("avgRating").getValue(Double.class);
+                long reviewCount = task.getResult().child("reviews").getChildrenCount();
+
+                // Calculate total rating, adjust for old and new ratings, and update average
+                double totalRating = currAvgRating * reviewCount;
+                totalRating = totalRating - oldRating + newRating;
+                double avgRating = totalRating / reviewCount;
+
+                // Update Firebase with the new average rating
+                beachRef.child("avgRating").setValue(avgRating);
+            } else {
+                Toast.makeText(ProfileActivity.this, "Failed to update rating after edit.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateDeletedRating(String beachName, double deletedRating) {
+        DatabaseReference beachRef = databaseRef.child("beaches").child(beachName);
+
+
+        beachRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                double currAvgRating = task.getResult().child("avgRating").getValue(Double.class);
+                long reviewCount = task.getResult().child("reviews").getChildrenCount();
+
+                Log.d("AVG RATING", String.valueOf(currAvgRating));
+                Log.d("AVG RATING", String.valueOf(reviewCount));
+
+                if (reviewCount > 0) {
+                    // Calculate total rating, subtract deleted rating, and update average
+                    double totalRating = currAvgRating * (reviewCount + 1);
+                    totalRating -= deletedRating;
+                    double avgRating = totalRating / reviewCount;
+
+                    // Update Firebase with the new average rating
+                    beachRef.child("avgRating").setValue(avgRating);
+                } else {
+                    // If no reviews remain, reset the rating to 0 or N/A
+                    beachRef.child("avgRating").setValue(0.0);
+                }
+            } else {
+                Toast.makeText(ProfileActivity.this, "Failed to update rating after delete.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 
     private void navigateTo(Class<?> targetActivity) {
         Intent intent = new Intent(this, targetActivity);
