@@ -119,27 +119,38 @@ android:layout_height="match_parent">
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="___ Beach Reviews"
+                android:text="Beach Reviews"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/blue_dark"/>
 
+            <TextView
+                android:id="@+id/reviewInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Average Rating:"
+                android:textSize="16sp"
+                android:textColor="@color/blue_hint"/>
+
+            <!-- RatingBar for average rating -->
+            <RatingBar
+                android:id="@+id/avgRatingBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:numStars="5"
+                android:stepSize="0.5"
+                android:isIndicator="true"
+                android:rating="0.0" />
+
+            <!-- Review container -->
             <LinearLayout
                 android:id="@+id/reviewContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginTop="4dp">
-
-                <TextView
-                    android:id="@+id/exampleReview"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:padding="8dp"
-                    android:text="Good beach for surfing and water sports! - @user1234"
-                    android:textColor="@color/blue_dark"
-                    android:textSize="14sp" />
-
+                android:layout_marginTop="8dp">
+                <!-- Reviews will be dynamically added here -->
             </LinearLayout>
 
             <Button

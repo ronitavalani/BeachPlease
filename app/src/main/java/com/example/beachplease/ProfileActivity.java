@@ -163,11 +163,24 @@ public class ProfileActivity extends AppCompatActivity {
         reviewInput.setText(review.getComment());
         layout.addView(reviewInput);
 
+        LinearLayout ratingLayout = new LinearLayout(this);
+        ratingLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+        int starWidth = 48;
+        int totalWidth = starWidth * 5;
+
         final RatingBar ratingBar = new RatingBar(this);
         ratingBar.setNumStars(5);
         ratingBar.setStepSize(0.5f);
-        ratingBar.setRating(review.getRating().floatValue());
-        layout.addView(ratingBar);
+        ratingBar.setMax(5);
+
+        float scale = getResources().getDisplayMetrics().density;
+        int widthInPx = (int) (totalWidth * scale + 0.5f);
+
+        ratingBar.setLayoutParams(new LinearLayout.LayoutParams(widthInPx, LinearLayout.LayoutParams.WRAP_CONTENT));
+        ratingLayout.addView(ratingBar);
+
+        layout.addView(ratingLayout);
 
         final String[] tags = {
                 "Surfing", "Family-Friendly", "Pet-Friendly", "Picnic Areas", "Restrooms Available",

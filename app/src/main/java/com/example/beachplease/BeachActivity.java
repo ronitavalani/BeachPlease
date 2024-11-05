@@ -48,12 +48,14 @@ import java.util.Locale;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import android.widget.RatingBar;
 
 public class BeachActivity extends AppCompatActivity {
     private ImageView beachImage;
     private TextView beachName, beachBlurb, beachHours, liveWeatherInfo, reviewInfo, exampleReview;
     private LinearLayout tagLayout, reviewContainer;
     private LinearLayout forecastLayout;
+    private RatingBar avgRatingBar; // RatingBar for average rating
     private static final String API_KEY = "60656159d401dedb2ab28b487e8bd931";
     private DatabaseReference databaseRef;
     private Set<String> loadedReviewIds = new HashSet<>(); // Track loaded reviews
@@ -74,11 +76,11 @@ public class BeachActivity extends AppCompatActivity {
         beachBlurb = findViewById(R.id.beachBlurb);
         beachHours = findViewById(R.id.beachTimes);
         liveWeatherInfo = findViewById(R.id.weatherInfo);
-        reviewInfo = findViewById(R.id.review);
-        exampleReview = findViewById(R.id.exampleReview);
+        reviewInfo = findViewById(R.id.reviewInfo);
         forecastLayout = findViewById(R.id.forecastLayout);
         tagLayout = findViewById(R.id.tagLayout);
         reviewContainer = findViewById(R.id.reviewContainer);
+        avgRatingBar = findViewById(R.id.avgRatingBar); // Initialize RatingBar
 
         // Set up navigation
         mapTab.setOnClickListener(v -> navigateTo(MainActivity.class));
@@ -105,7 +107,9 @@ public class BeachActivity extends AppCompatActivity {
         beachName.setText(selectedBeach.getName());
         beachBlurb.setText(selectedBeach.getBlurb());
         beachHours.setText("Hours: " + selectedBeach.getHours());
-        reviewInfo.setText("Average Rating: " + (selectedBeach.getAvgRating() != null ? selectedBeach.getAvgRating() : "N/A"));
+        reviewInfo.setText("Average Rating: ");
+        if(selectedBeach.getAvgRating() != null)
+            avgRatingBar.setRating(selectedBeach.getAvgRating().floatValue());
         Glide.with(this).load(selectedBeach.getPicture()).into(beachImage);
 
         displayTags(selectedBeach);
@@ -328,42 +332,6 @@ public class BeachActivity extends AppCompatActivity {
         });
     }
 
-    @SuppressLint("ResourceAsColor")
-    private void addReviewView(Review review, String username) {
-        LinearLayout reviewLayout = new LinearLayout(this);
-        reviewLayout.setOrientation(LinearLayout.VERTICAL);
-        reviewLayout.setPadding(16, 16, 16, 16);
-
-        TextView reviewAuthor = new TextView(this);
-        reviewAuthor.setText("Author: " + username);
-
-        TextView reviewDate = new TextView(this);
-        reviewDate.setText("Date: " + new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(review.getDate()));
-
-        TextView reviewRating = new TextView(this);
-        reviewRating.setText("Rating: " + review.getRating());
-
-        TextView reviewText = new TextView(this);
-        reviewText.setText(review.getComment());
-
-        TextView reviewTags = new TextView(this);
-        List<String> tags = review.getTags() != null ? review.getTags() : new ArrayList<>();
-        reviewTags.setText("Tags: " + String.join(", ", tags));
-
-        reviewLayout.addView(reviewAuthor);
-        reviewLayout.addView(reviewDate);
-        reviewLayout.addView(reviewRating);
-        reviewLayout.addView(reviewText);
-        reviewLayout.addView(reviewTags);
-
-        View divider = new View(this);
-        divider.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2));
-        divider.setBackgroundColor(android.R.color.darker_gray);
-
-        reviewContainer.addView(reviewLayout);
-        reviewContainer.addView(divider);
-    }
-
     private void showAddReviewDialog(Beach selectedBeach, String user) {
         final String[] tags = {
                 "Surfing", "Family-Friendly", "Pet-Friendly", "Picnic Areas", "Restrooms Available",
@@ -385,9 +353,14 @@ public class BeachActivity extends AppCompatActivity {
         reviewInput.setHint("Write your review...");
         layout.addView(reviewInput);
 
-        final RatingBar ratingBar = new RatingBar(this);
+        final RatingBar ratingBar = new RatingBar(this, null, android.R.attr.ratingBarStyleIndicator);
         ratingBar.setNumStars(5);
         ratingBar.setStepSize(0.5f);
+        ratingBar.setMax(5);
+        ratingBar.setIsIndicator(false); // Make it clickable since indicator style is read-only by default
+        ratingBar.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
         layout.addView(ratingBar);
 
         GridLayout tagLayout = new GridLayout(this);
@@ -451,18 +424,61 @@ public class BeachActivity extends AppCompatActivity {
                 double currAvgRating = task.getResult().child("avgRating").getValue(Double.class);
                 long reviewCount = task.getResult().child("reviews").getChildrenCount();
 
-                double totalRating = currAvgRating * (reviewCount-1);
-                System.out.println(totalRating + " , " + reviewCount);
-                totalRating += newRating;
-                System.out.println(newRating);
+                double totalRating = currAvgRating * (reviewCount - 1) + newRating;
                 double avgRating = totalRating / reviewCount;
                 beachRef.child("avgRating").setValue(avgRating);
-                reviewInfo.setText("Average Rating: " + avgRating);
-            }
-            else {
+
+                avgRatingBar.setStepSize(0.5f); // Set step size
+                avgRatingBar.setRating((float) avgRating); // Explicitly cast to float
+                reviewInfo.setText("Average Rating:");
+            } else {
                 Toast.makeText(BeachActivity.this, "Failed to retrieve review rating.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @SuppressLint("ResourceAsColor")
+    private void addReviewView(Review review, String username) {
+        LinearLayout reviewLayout = new LinearLayout(this);
+        reviewLayout.setOrientation(LinearLayout.VERTICAL);
+        reviewLayout.setPadding(16, 16, 16, 16);
+
+        TextView reviewAuthor = new TextView(this);
+        reviewAuthor.setText("Author: " + username);
+
+        TextView reviewDate = new TextView(this);
+        reviewDate.setText("Date: " + new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(review.getDate()));
+
+        TextView reviewText = new TextView(this);
+        reviewText.setText(review.getComment());
+
+        final RatingBar reviewRatingBar = new RatingBar(this, null, android.R.attr.ratingBarStyleIndicator);
+        reviewRatingBar.setNumStars(5);
+        reviewRatingBar.setStepSize(0.5f);
+        reviewRatingBar.setMax(5);
+        reviewRatingBar.setIsIndicator(false); // Make it clickable since indicator style is read-only by default
+        reviewRatingBar.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+        reviewRatingBar.setRating(review.getRating().floatValue());
+        reviewRatingBar.setIsIndicator(true); // Set to non-clickable for review display
+
+        TextView reviewTags = new TextView(this);
+        List<String> tags = review.getTags() != null ? review.getTags() : new ArrayList<>();
+        reviewTags.setText("Tags: " + String.join(", ", tags));
+
+        reviewLayout.addView(reviewAuthor);
+        reviewLayout.addView(reviewDate);
+        reviewLayout.addView(reviewText);
+        reviewLayout.addView(reviewRatingBar); // Add RatingBar for individual review
+        reviewLayout.addView(reviewTags);
+
+        View divider = new View(this);
+        divider.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2));
+        divider.setBackgroundColor(android.R.color.darker_gray);
+
+        reviewContainer.addView(reviewLayout);
+        reviewContainer.addView(divider);
     }
 
     private void updateBeachTags(Beach selectedBeach, List<String> newTags) {
