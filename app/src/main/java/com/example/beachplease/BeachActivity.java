@@ -110,24 +110,24 @@ public class BeachActivity extends AppCompatActivity {
         reviewInfo.setText("Average Rating: " + (selectedBeach.getAvgRating() != null ? selectedBeach.getAvgRating() : "N/A"));
         Glide.with(this).load(selectedBeach.getPicture()).into(beachImage);
 
-        // Clear any existing tags from the layout
+        // Clear any existing tags
         tagLayout.removeAllViews();
 
-        // Assuming getTags() now returns a Map<String, Integer> with tag names and counts
+        // Retrieve the tags map and display each with a bullet point
         Map<String, Integer> tagsMap = selectedBeach.getTags();
-
         if (tagsMap != null) {
             for (Map.Entry<String, Integer> entry : tagsMap.entrySet()) {
                 String tagName = entry.getKey();
                 Integer tagCount = entry.getValue();
 
-                // Create and format the TextView for each tag with count
+                // Create a TextView for each tag with a bullet
                 TextView tagView = new TextView(this);
-                tagView.setText(tagName);
-                tagView.setPadding(8, 4, 8, 4);
+                tagView.setText("\u2022 " + tagName + " (" + tagCount + ")");
                 tagView.setTextSize(15);
+                tagView.setTextColor(getResources().getColor(R.color.blue_hint));
+                tagView.setPadding(0, 4, 0, 4); // Adds spacing between each tag item
 
-                tagLayout.addView(tagView); // Add to the layout
+                tagLayout.addView(tagView);
             }
         }
     }
@@ -319,7 +319,8 @@ public class BeachActivity extends AppCompatActivity {
         reviewText.setText(review.getComment());
 
         TextView reviewTags = new TextView(this);
-        reviewTags.setText("Tags: " + String.join(", ", review.getTags()));
+        List<String> tags = review.getTags() != null ? review.getTags() : new ArrayList<>();
+        reviewTags.setText("Tags: " + String.join(", ", tags));
 
         reviewLayout.addView(reviewAuthor);
         reviewLayout.addView(reviewDate);
@@ -404,6 +405,7 @@ public class BeachActivity extends AppCompatActivity {
             databaseRef.child("reviews").child(reviewId).setValue(review).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     updateBeachReviewReference(selectedBeach, reviewId);
+                    updateRating(selectedBeach, review.getRating());
                     updateBeachTags(selectedBeach, review.getTags());
                     updateUserReviewReference(user, reviewId);
                     Toast.makeText(BeachActivity.this, "Review added!", Toast.LENGTH_SHORT).show();
@@ -412,6 +414,27 @@ public class BeachActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private void updateRating(Beach beach, double newRating) {
+        DatabaseReference beachRef = databaseRef.child("beaches").child(beach.getName());
+        beachRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                double currAvgRating = task.getResult().child("avgRating").getValue(Double.class);
+                long reviewCount = task.getResult().child("reviews").getChildrenCount();
+
+                double totalRating = currAvgRating * (reviewCount-1);
+                System.out.println(totalRating + " , " + reviewCount);
+                totalRating += newRating;
+                System.out.println(newRating);
+                double avgRating = totalRating / reviewCount;
+                beachRef.child("avgRating").setValue(avgRating);
+                reviewInfo.setText("Average Rating: " + avgRating);
+            }
+            else {
+                Toast.makeText(BeachActivity.this, "Failed to retrieve review rating.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void updateBeachTags(Beach selectedBeach, List<String> newTags) {
