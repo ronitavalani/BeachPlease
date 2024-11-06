@@ -35,6 +35,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     private GoogleMap googleMap;
@@ -146,7 +148,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         googleMap = map;
 
         LatLng defaultLocation = new LatLng(34.0522, -118.2437); // Los Angeles coordinates
-        googleMap.addMarker(new MarkerOptions().position(defaultLocation).title("Los Angeles"));
         googleMap.moveCamera(com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(defaultLocation, 10));
 
         googleMap.setOnMarkerClickListener(this);
@@ -158,10 +159,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (marker.getTag() instanceof Beach) {
             Beach selectedBeach = (Beach) marker.getTag();
 
-            // Show an alert dialog with beach details and "View" button
+            // Retrieve and sort tags by values in descending order, then select the top two
+            Map<String, Integer> tagsMap = selectedBeach.getTags();
+            String topTags = tagsMap.entrySet().stream()
+                    .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue())) // Sort in descending order of values
+                    .limit(2) // Take the top two entries
+                    .map(entry -> entry.getKey()) // Format each entry as "Tag (Value)"
+                    .collect(Collectors.joining(", ")); // Join with commas
+
+            // Retrieve hours information
+            String hours = selectedBeach.getHours();
+
+            // Construct the message with top tags and hours
+            String message = "Top Tags: " + topTags + "\n" +
+                    "Hours: " + hours + "\n\n" +
+                    "Would you like to view more details about " + selectedBeach.getName() + "?";
+
             new AlertDialog.Builder(this)
                     .setTitle(selectedBeach.getName())
-                    .setMessage("Would you like to view more details about " + selectedBeach.getName() + "?")
+                    .setMessage(message)
                     .setPositiveButton("View", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {

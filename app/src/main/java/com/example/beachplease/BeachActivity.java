@@ -52,7 +52,7 @@ import android.widget.RatingBar;
 
 public class BeachActivity extends AppCompatActivity {
     private ImageView beachImage;
-    private TextView beachName, beachBlurb, beachHours, liveWeatherInfo, reviewInfo, exampleReview;
+    private TextView beachName, beachBlurb, beachHours, liveWeatherInfo;
     private LinearLayout tagLayout, reviewContainer;
     private LinearLayout forecastLayout;
     private RatingBar avgRatingBar; // RatingBar for average rating
@@ -76,7 +76,6 @@ public class BeachActivity extends AppCompatActivity {
         beachBlurb = findViewById(R.id.beachBlurb);
         beachHours = findViewById(R.id.beachTimes);
         liveWeatherInfo = findViewById(R.id.weatherInfo);
-        reviewInfo = findViewById(R.id.reviewInfo);
         forecastLayout = findViewById(R.id.forecastLayout);
         tagLayout = findViewById(R.id.tagLayout);
         reviewContainer = findViewById(R.id.reviewContainer);
@@ -107,7 +106,6 @@ public class BeachActivity extends AppCompatActivity {
         beachName.setText(selectedBeach.getName());
         beachBlurb.setText(selectedBeach.getBlurb());
         beachHours.setText("Hours: " + selectedBeach.getHours());
-        reviewInfo.setText("Average Rating: ");
         if(selectedBeach.getAvgRating() != null)
             avgRatingBar.setRating(selectedBeach.getAvgRating().floatValue());
         Glide.with(this).load(selectedBeach.getPicture()).into(beachImage);
@@ -436,7 +434,6 @@ public class BeachActivity extends AppCompatActivity {
 
                 avgRatingBar.setStepSize(0.5f); // Set step size
                 avgRatingBar.setRating((float) avgRating); // Explicitly cast to float
-                reviewInfo.setText("Average Rating:");
             } else {
                 Toast.makeText(BeachActivity.this, "Failed to retrieve review rating.", Toast.LENGTH_SHORT).show();
             }

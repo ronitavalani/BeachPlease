@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-android:layout_width="match_parent"
-android:layout_height="match_parent">
-    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_above="@id/navigationBar">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -22,28 +22,35 @@ android:layout_height="match_parent">
                 android:contentDescription="Beach Image"
                 android:src="@android:drawable/ic_menu_gallery"/>
 
-            <!-- Beach Name -->
             <TextView
                 android:id="@+id/beachName"
+                android:layout_width="183dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:text="Beach Name"
+                android:textColor="@color/blue_dark"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <RatingBar
+                android:id="@+id/avgRatingBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="@color/blue_dark"
-                android:layout_marginBottom="8dp"
-                android:text="Beach Name" />
+                android:isIndicator="true"
+                android:numStars="5"
+                android:rating="0.0"
+                android:stepSize="0.5" />
 
-            <!-- Beach Blurb -->
             <TextView
                 android:id="@+id/beachBlurb"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
-                android:textColor="@color/blue_hint"
+                android:textColor="@color/blue_dark"
                 android:layout_marginBottom="16dp"
                 android:text="Beach Description" />
 
-            <!-- Real-time weather info displayed on page -->
             <TextView
                 android:id="@+id/beachTimes"
                 android:layout_width="wrap_content"
@@ -61,14 +68,15 @@ android:layout_height="match_parent">
                 android:text="Loading weather data..."
                 android:textSize="16sp"
                 android:textColor="@color/blue_hint"/>
-            <!-- Forecast Section for the next 6 hours -->
+
             <TextView
                 android:id="@+id/forecastHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=" Weather Forecast"
+                android:text="Weather Forecast"
                 android:textSize="18sp"
                 android:textStyle="bold"
+                android:textColor="@color/blue_dark"
                 android:layout_marginTop="16dp" />
 
             <HorizontalScrollView
@@ -82,11 +90,9 @@ android:layout_height="match_parent">
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
-                    <!-- Forecast items will be added here dynamically -->
                 </LinearLayout>
             </HorizontalScrollView>
 
-            <!-- Label and container for dynamically loaded tags -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -94,24 +100,22 @@ android:layout_height="match_parent">
                 android:padding="0dp"
                 android:gravity="center_vertical">
 
-                <!-- "Tags:" label -->
                 <TextView
                     android:id="@+id/tagsLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Tags:"
-                    android:textColor="@color/blue_hint"
+                    android:textColor="@color/blue_dark"
+                    android:textStyle="bold"
                     android:textSize="16sp"
                     android:layout_marginEnd="8dp"/>
 
-                <!-- Dynamic tag layout -->
                 <LinearLayout
                     android:id="@+id/tagLayout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
                 </LinearLayout>
-
             </LinearLayout>
 
             <TextView
@@ -124,45 +128,24 @@ android:layout_height="match_parent">
                 android:textStyle="bold"
                 android:textColor="@color/blue_dark"/>
 
-            <TextView
-                android:id="@+id/reviewInfo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Average Rating:"
-                android:textSize="16sp"
-                android:textColor="@color/blue_hint"/>
+            <Button
+                android:id="@+id/addReview"
+                android:layout_width="180dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                android:text="Leave a Review"
+                android:textSize="13sp" />
 
-            <!-- RatingBar for average rating -->
-            <RatingBar
-                android:id="@+id/avgRatingBar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:numStars="5"
-                android:stepSize="0.5"
-                android:isIndicator="true"
-                android:rating="0.0" />
-
-            <!-- Review container -->
             <LinearLayout
                 android:id="@+id/reviewContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_marginTop="8dp">
-                <!-- Reviews will be dynamically added here -->
             </LinearLayout>
-
-            <Button
-                android:id="@+id/addReview"
-                android:layout_width="134dp"
-                android:layout_height="48dp"
-                android:layout_marginTop="10dp"
-                android:text="Add Review"
-                android:textSize="13sp" />
-
         </LinearLayout>
     </ScrollView>
+
     <LinearLayout
         android:id="@+id/navigationBar"
         android:layout_width="match_parent"
