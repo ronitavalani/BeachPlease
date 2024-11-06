@@ -45,18 +45,20 @@
     </LinearLayout>
 
     <!-- Reviews List Section -->
-    <LinearLayout
-        android:id="@+id/reviews_section"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/navigationBar"
+        android:layout_height="0dp"
         android:layout_below="@id/user_info_section"
-        android:layout_marginTop="1dp"
-        android:layout_marginBottom="-1dp"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_above="@id/navigationBar">
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/reviews_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+          
+          <TextView
             android:id="@+id/reviewTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -64,7 +66,8 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginEnd="8dp" />
-    </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 
     <!-- Navigation Bar -->
     <LinearLayout
