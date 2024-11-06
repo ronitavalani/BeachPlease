@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "527248708293",
+    "firebase_url": "https://beachplease-d3daa-default-rtdb.firebaseio.com",
+    "project_id": "beachplease-d3daa",
+    "storage_bucket": "beachplease-d3daa.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:527248708293:android:772960e4a847f2ceac16ac",
+        "android_client_info": {
+          "package_name": "com.example.beachplease"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCslAe9tF_CwamHxhMhEnuWyy1RP0AfFwU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
