@@ -353,6 +353,10 @@ public class BeachActivity extends AppCompatActivity {
         reviewInput.setHint("Write your review...");
         layout.addView(reviewInput);
 
+        final EditText picUrlInput = new EditText(this);
+        picUrlInput.setHint("Enter image URL...");
+        layout.addView(picUrlInput);
+
         final RatingBar ratingBar = new RatingBar(this, null, android.R.attr.ratingBarStyleIndicator);
         ratingBar.setNumStars(5);
         ratingBar.setStepSize(0.5f);
@@ -387,10 +391,11 @@ public class BeachActivity extends AppCompatActivity {
         builder.setPositiveButton("Submit", (dialog, which) -> {
             String reviewText = reviewInput.getText().toString();
             Double rating = (double) ratingBar.getRating();
+            String picUrl= picUrlInput.getText().toString();
 
             if (!reviewText.isEmpty() && rating > 0) {
-                Review newReview = new Review(selectedBeach.getName(), rating, date, user, reviewText, new ArrayList<>(selectedTags));
-                saveReviewToFirebase(selectedBeach, user, newReview);
+                Review newReview = new Review(selectedBeach.getName(), rating, date, user, reviewText, new ArrayList<>(selectedTags), picUrl);
+                saveReviewToFirebase(selectedBeach, user, newReview, picUrl);
             } else {
                 Toast.makeText(BeachActivity.this, "Please complete all review fields.", Toast.LENGTH_SHORT).show();
             }
@@ -399,7 +404,8 @@ public class BeachActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void saveReviewToFirebase(Beach selectedBeach, String user, Review review) {
+    private void saveReviewToFirebase(Beach selectedBeach, String user, Review review, String picUrl) {
+        review.setPicUrl(picUrl);
         String reviewId = databaseRef.child("reviews").push().getKey();
 
         if (reviewId != null) {
@@ -467,6 +473,8 @@ public class BeachActivity extends AppCompatActivity {
         List<String> tags = review.getTags() != null ? review.getTags() : new ArrayList<>();
         reviewTags.setText("Tags: " + String.join(", ", tags));
 
+        reviewImage(review.getPicUrl(), reviewLayout );
+
         reviewLayout.addView(reviewAuthor);
         reviewLayout.addView(reviewDate);
         reviewLayout.addView(reviewText);
@@ -529,4 +537,18 @@ public class BeachActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
+
+   private void reviewImage(String picUrl, LinearLayout imageLayout){
+        ImageView revImageView = new ImageView(this);
+        revImageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 300));
+        revImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+        if (picUrl != null && !picUrl.isEmpty()){
+            Glide.with(this)
+                    .load(picUrl)
+                    .into(revImageView);
+                    imageLayout.addView(revImageView);
+            
+        }
+   }
 }
