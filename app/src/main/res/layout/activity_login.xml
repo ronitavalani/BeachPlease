@@ -6,6 +6,26 @@
     android:gravity="center"
     android:padding="16dp">
 
+    <TextView
+        android:id="@+id/titleEmojis"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="35dp"
+        android:text="@string/beachPlease"
+        android:textColor="@color/blue_dark"
+        android:textSize="100sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="35dp"
+        android:text="BeachPlease"
+        android:textColor="@color/blue_dark"
+        android:textSize="32sp"
+        android:textStyle="bold" />
+
     <EditText
         android:id="@+id/email"
         android:layout_width="match_parent"

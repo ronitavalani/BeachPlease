@@ -34,7 +34,10 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     private GoogleMap googleMap;
@@ -126,10 +129,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if(filters.isEmpty()) {
                     matchesFilters = true;
                 }
-                if (beach.getTags() != null) { // Check if tags are not null
+                else if (beach.getTags() != null && !beach.getTags().isEmpty()) { // Check if tags are not null
                     Log.d("Beach Tag", beach.getName() + beach.getTags().toString());
+                    List<Map.Entry<String, Integer>> sortedTags = new ArrayList<>(beach.getTags().entrySet());
+                    sortedTags.sort((entry1, entry2) -> {
+                        int freqComparison = entry2.getValue().compareTo(entry1.getValue()); // Descending order
+                        return freqComparison != 0 ? freqComparison : entry1.getKey().compareTo(entry2.getKey()); // Alphabetical tie-breaker
+                    });
+
+                    // Extract the top two tags
+                    Set<String> topTags = new HashSet<>();
+                    for (int i = 0; i < Math.min(2, sortedTags.size()); i++) {
+                        topTags.add(sortedTags.get(i).getKey());
+                    }
+
+                    // Check if any filter matches the top two tags
                     for (String filter : filters) {
-                        if (beach.getTags().containsKey(filter)) {
+                        if (topTags.contains(filter)) {
                             matchesFilters = true;
                             break;
                         }
