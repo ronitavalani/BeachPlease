@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.GridLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.ScrollView;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -128,6 +130,12 @@ public class ProfileActivity extends AppCompatActivity {
         tagsView.setText("Tags: " + String.join(", ", tags));
         reviewLayout.addView(tagsView);
 
+        if(review.getPicUrl() != null && !review.getPicUrl().isEmpty()){
+            ImageView revImageView = new ImageView(this);
+            Glide.with(this).load(review.getPicUrl()).into(revImageView);
+            reviewLayout.addView(revImageView);
+        }
+
         // Buttons layout for Edit and Delete buttons
         LinearLayout buttonLayout = new LinearLayout(this);
         buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -212,6 +220,12 @@ public class ProfileActivity extends AppCompatActivity {
             tagLayout.addView(checkBox);
         }
         layout.addView(tagLayout);
+
+        final EditText picUrlInput = new EditText(this);
+        picUrlInput.setHint("Image URL");
+        picUrlInput.setText(review.getPicUrl() !=null ? review.getPicUrl() : "");
+        layout.addView(picUrlInput);
+
         scrollView.addView(layout);
         builder.setView(scrollView);
 
@@ -219,11 +233,13 @@ public class ProfileActivity extends AppCompatActivity {
             String updatedComment = reviewInput.getText().toString();
             double updatedRating = (double) ratingBar.getRating();
             double oldRating = review.getRating(); // Store old rating
+            String newPicUrl = picUrlInput.getText().toString().trim();
 
             // Update review object with new data
             review.setComment(updatedComment);
             review.setRating(updatedRating);
             review.setTags(selectedTags);
+            review.setPicUrl(newPicUrl);
 
             // Calculate tags that were deselected and newly selected
             Set<String> deselectedTags = new HashSet<>(originalTags);
