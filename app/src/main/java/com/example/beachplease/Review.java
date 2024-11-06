@@ -11,19 +11,21 @@ public class Review {
     private String author;
     private String comment;
     private List<String> tags;
+    private String picUrl;
 
     // No-argument constructor required for Firebase
     public Review() {
     }
 
     // Full constructor
-    public Review(String beachName, Double rating, Date date, String author, String comment, ArrayList<String> tags) {
+    public Review(String beachName, Double rating, Date date, String author, String comment, ArrayList<String> tags, String picUrl) {
         this.beachName = beachName;
         this.rating = rating;
         this.date = date;
         this.author = author;
         this.comment = comment;
         this.tags = tags;
+        this.picUrl = picUrl;
     }
 
     // Getters and setters
@@ -74,4 +76,8 @@ public class Review {
     public void setTags(List<String> tags) {
         this.tags = tags;
     }
+
+    public String getPicUrl(){return picUrl;}
+
+    public void setPicUrl(String picUrl){this.picUrl = picUrl;}
 }
