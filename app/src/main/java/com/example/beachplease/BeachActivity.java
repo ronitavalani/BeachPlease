@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -17,6 +18,8 @@ import android.widget.RatingBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.net.Uri;
+
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,6 +33,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.FirebaseStorage;
+
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -57,13 +63,19 @@ public class BeachActivity extends AppCompatActivity {
     private LinearLayout forecastLayout;
     private RatingBar avgRatingBar; // RatingBar for average rating
     private static final String API_KEY = "60656159d401dedb2ab28b487e8bd931";
+    private static final int IMAGE_REQUEST = 1;
     private DatabaseReference databaseRef;
     private Set<String> loadedReviewIds = new HashSet<>(); // Track loaded reviews
+    private Uri selectImage;
+    private StorageReference storageReference;
+    private android.webkit.MimeTypeMap MimeTypeMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beach);
+
+        storageReference = FirebaseStorage.getInstance().getReference().child("images");
 
         Beach selectedBeach = getIntent().getParcelableExtra("selectedBeach");
         databaseRef = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/").getReference();
@@ -353,9 +365,16 @@ public class BeachActivity extends AppCompatActivity {
         reviewInput.setHint("Write your review...");
         layout.addView(reviewInput);
 
-        final EditText picUrlInput = new EditText(this);
-        picUrlInput.setHint("Enter image URL...");
-        layout.addView(picUrlInput);
+        Button uploadPicButton = new Button(this);
+        uploadPicButton.setText("Upload Image");
+        uploadPicButton.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light)); // Use any color from resources or define your own
+        uploadPicButton.setTextColor(getResources().getColor(android.R.color.white));
+        uploadPicButton.setOnClickListener(v -> openImagePicker());
+        layout.addView(uploadPicButton);
+
+//        final EditText picUrlInput = new EditText(this);
+//        picUrlInput.setHint("Enter image URL...");
+//        layout.addView(picUrlInput);
 
         final RatingBar ratingBar = new RatingBar(this, null, android.R.attr.ratingBarStyleIndicator);
         ratingBar.setNumStars(5);
@@ -391,11 +410,17 @@ public class BeachActivity extends AppCompatActivity {
         builder.setPositiveButton("Submit", (dialog, which) -> {
             String reviewText = reviewInput.getText().toString();
             Double rating = (double) ratingBar.getRating();
-            String picUrl= picUrlInput.getText().toString();
+           // String picUrl= picUrlInput.getText().toString();
 
             if (!reviewText.isEmpty() && rating > 0) {
-                Review newReview = new Review(selectedBeach.getName(), rating, date, user, reviewText, new ArrayList<>(selectedTags), picUrl);
-                saveReviewToFirebase(selectedBeach, user, newReview, picUrl);
+                Review newReview = new Review(selectedBeach.getName(), rating, date, user, reviewText, new ArrayList<>(selectedTags));
+                if (selectImage != null) {
+                    // Upload the image and then save the review with the image URL
+                    uploadImageRev(selectedBeach, user, newReview);
+                } else {
+                    // No image selected, save the review without an image
+                    saveReviewToFirebase(selectedBeach, user, newReview, null);
+                }
             } else {
                 Toast.makeText(BeachActivity.this, "Please complete all review fields.", Toast.LENGTH_SHORT).show();
             }
@@ -415,6 +440,7 @@ public class BeachActivity extends AppCompatActivity {
                     updateRating(selectedBeach, review.getRating());
                     updateBeachTags(selectedBeach, review.getTags());
                     updateUserReviewReference(user, reviewId);
+                    displayReviews(selectedBeach.getName());
                     Toast.makeText(BeachActivity.this, "Review added!", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(BeachActivity.this, "Failed to save review.", Toast.LENGTH_SHORT).show();
@@ -473,7 +499,7 @@ public class BeachActivity extends AppCompatActivity {
         List<String> tags = review.getTags() != null ? review.getTags() : new ArrayList<>();
         reviewTags.setText("Tags: " + String.join(", ", tags));
 
-        reviewImage(review.getPicUrl(), reviewLayout );
+       // reviewImage(review.getPicUrl(), reviewLayout );
 
         reviewLayout.addView(reviewAuthor);
         reviewLayout.addView(reviewDate);
@@ -481,6 +507,21 @@ public class BeachActivity extends AppCompatActivity {
         reviewLayout.addView(reviewRatingBar); // Add RatingBar for individual review
         reviewLayout.addView(reviewTags);
 
+        if (review.getPicUrl() !=null && !review.getPicUrl().isEmpty()){
+            ImageView reviewImageView = new ImageView(this);
+            reviewImageView.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 300));
+            reviewImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+            // Load the image using Glide
+            Glide.with(this)
+                    .load(review.getPicUrl())
+                    .into(reviewImageView);
+
+            // Add the ImageView to the review layout
+            reviewLayout.addView(reviewImageView);
+
+        }
         View divider = new View(this);
         divider.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2));
         divider.setBackgroundColor(android.R.color.darker_gray);
@@ -538,17 +579,85 @@ public class BeachActivity extends AppCompatActivity {
         finish();
     }
 
-   private void reviewImage(String picUrl, LinearLayout imageLayout){
-        ImageView revImageView = new ImageView(this);
-        revImageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 300));
-        revImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+    private void openImagePicker(){
+        Intent imageIntent = new Intent();
+        imageIntent.setType("image/*");
+        imageIntent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(imageIntent,"Select Picture" ), IMAGE_REQUEST );
+    }
 
-        if (picUrl != null && !picUrl.isEmpty()){
-            Glide.with(this)
-                    .load(picUrl)
-                    .into(revImageView);
-                    imageLayout.addView(revImageView);
-            
+    @Override
+    protected void onActivityResult (int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            selectImage = data.getData();
+            // Log the selected image URI to confirm it's correct
+            Log.d("ImagePicker", "Selected Image URI: " + selectImage.toString());
+            Toast.makeText(this, "Image selected successfully!", Toast.LENGTH_SHORT).show();
+        } else {
+            Log.d("ImagePicker", "Image selection failed or was cancelled.");
         }
-   }
-}
+    }
+
+    private void uploadImageRev (Beach selectedBeach, String user, Review review){
+                if (selectImage != null) {
+                    String fileExtension = getFileExtension(selectImage);  // Get the file extension
+                    StorageReference fileRef = storageReference.child(System.currentTimeMillis() + "." + fileExtension);
+
+                    // Log the file path to check if it's correct
+                    Log.d("FirebaseStorage", "File path: " + fileRef.getPath());
+
+                    fileRef.putFile(selectImage).addOnSuccessListener(taskSnapshot -> {
+                        fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                            String imageUrl = uri.toString();
+                            review.setPicUrl(imageUrl);  // Set the image URL in the review
+                            saveReviewToFirebase(selectedBeach, user, review, imageUrl);
+                            Toast.makeText(BeachActivity.this, "Image uploaded successfully!", Toast.LENGTH_SHORT).show();
+                        }).addOnFailureListener(e -> {
+                            // If the download URL retrieval fails, log the error
+                            Log.e("FirebaseStorage", "Failed to get download URL: " + e.getMessage());
+                            Toast.makeText(BeachActivity.this, "Failed to get image URL.", Toast.LENGTH_SHORT).show();
+                        });
+                    }).addOnFailureListener(e -> {
+                        // Log the error if the file upload fails
+                        Log.e("FirebaseStorage", "Failed to upload image: " + e.getMessage());
+                        Toast.makeText(BeachActivity.this, "Failed to upload image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+                } else {
+                    // If no image was selected, save the review directly without an image URL
+                    saveReviewToFirebase(selectedBeach, user, review, null);
+                }
+            }
+
+            private String getFileExtension(Uri uri) {
+                String extension;
+                if (uri.getScheme().equals("content")) {
+                    // If the URI is of the "content" type, query the file extension
+                    extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(getContentResolver().getType(uri));
+                } else {
+                    // If the URI is a file path, extract the file extension directly
+                    extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+                }
+                return extension != null ? extension : "jpg"; // Default to "jpg" if extension is not found
+            }
+
+            private void reviewImage(String picUrl, LinearLayout imageLayout){
+                ImageView revImageView = new ImageView(this);
+                revImageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 300));
+                revImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+                if (picUrl != null && !picUrl.isEmpty()){
+                    Glide.with(this)
+                            .load(picUrl)
+                            .into(revImageView);
+                    imageLayout.addView(revImageView);
+
+                }
+            }
+
+    }
+
+
+
+
+

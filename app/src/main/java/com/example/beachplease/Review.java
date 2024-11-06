@@ -18,14 +18,14 @@ public class Review {
     }
 
     // Full constructor
-    public Review(String beachName, Double rating, Date date, String author, String comment, ArrayList<String> tags, String picUrl) {
+    public Review(String beachName, Double rating, Date date, String author, String comment, ArrayList<String> tags) {
         this.beachName = beachName;
         this.rating = rating;
         this.date = date;
         this.author = author;
         this.comment = comment;
         this.tags = tags;
-        this.picUrl = picUrl;
+        //this.picUrl = picUrl;
     }
 
     // Getters and setters
