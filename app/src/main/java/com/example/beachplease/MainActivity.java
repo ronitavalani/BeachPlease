@@ -177,7 +177,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Retrieve and sort tags by values in descending order, then select the top two
             Map<String, Integer> tagsMap = selectedBeach.getTags();
             String topTags = tagsMap.entrySet().stream()
-                    .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue())) // Sort in descending order of values
+                    .sorted((e1, e2) -> {
+                        int valueComparison = e2.getValue().compareTo(e1.getValue()); // Descending order of values
+                        return valueComparison != 0 ? valueComparison : e1.getKey().compareTo(e2.getKey());
+                    }) // Sort in descending order of values
                     .limit(2) // Take the top two entries
                     .map(entry -> entry.getKey()) // Format each entry as "Tag (Value)"
                     .collect(Collectors.joining(", ")); // Join with commas
