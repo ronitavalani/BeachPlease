@@ -593,7 +593,7 @@ public class BeachActivity extends AppCompatActivity {
             selectImage = data.getData();
             // Log the selected image URI to confirm it's correct
             Log.d("ImagePicker", "Selected Image URI: " + selectImage.toString());
-            Toast.makeText(this, "Image selected successfully!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Image selected successfully!!", Toast.LENGTH_SHORT).show();
         } else {
             Log.d("ImagePicker", "Image selection failed or was cancelled.");
         }
