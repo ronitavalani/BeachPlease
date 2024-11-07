@@ -132,10 +132,18 @@ public class ProfileActivity extends AppCompatActivity {
         tagsView.setText("Tags: " + String.join(", ", tags));
         reviewLayout.addView(tagsView);
 
-        if(review.getPicUrl() != null && !review.getPicUrl().isEmpty()){
-            ImageView revImageView = new ImageView(this);
-            Glide.with(this).load(review.getPicUrl()).into(revImageView);
-            reviewLayout.addView(revImageView);
+        if (review.getPicUrl() != null && !review.getPicUrl().isEmpty()) {
+            ImageView reviewImageView = new ImageView(this);
+            reviewImageView.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 400));  // Adjust height as needed
+            reviewImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+            // Load the image using Glide
+            Glide.with(this)
+                    .load(review.getPicUrl())
+                    .into(reviewImageView);
+
+            reviewLayout.addView(reviewImageView);
         }
 
         // Buttons layout for Edit and Delete buttons

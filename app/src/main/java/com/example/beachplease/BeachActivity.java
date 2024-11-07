@@ -4,9 +4,9 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -19,6 +19,11 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.net.Uri;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
+
+import java.io.ByteArrayOutputStream;
 
 
 import androidx.annotation.NonNull;
@@ -54,7 +59,6 @@ import java.util.Locale;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import android.widget.RatingBar;
 
 public class BeachActivity extends AppCompatActivity {
     private ImageView beachImage;
@@ -75,7 +79,10 @@ public class BeachActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beach);
 
+        // Initialize storageReference to the "images" folder in Firebase Storage
         storageReference = FirebaseStorage.getInstance().getReference().child("images");
+
+
 
         Beach selectedBeach = getIntent().getParcelableExtra("selectedBeach");
         databaseRef = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/").getReference();
@@ -415,12 +422,13 @@ public class BeachActivity extends AppCompatActivity {
             if (!reviewText.isEmpty() && rating > 0) {
                 Review newReview = new Review(selectedBeach.getName(), rating, date, user, reviewText, new ArrayList<>(selectedTags));
                 if (selectImage != null) {
-                    // Upload the image and then save the review with the image URL
-                    uploadImageRev(selectedBeach, user, newReview);
-                } else {
-                    // No image selected, save the review without an image
-                    saveReviewToFirebase(selectedBeach, user, newReview, null);
+                    // Convert the selected image to Base64 and store it in the review
+                    String base64Image = encodeImageToBase64(selectImage);
+                    newReview.setPicUrl(base64Image);  // store base64 in the same field
                 }
+
+                // Save the review with the Base64-encoded image directly
+                saveReviewToFirebase(selectedBeach, user, newReview);
             } else {
                 Toast.makeText(BeachActivity.this, "Please complete all review fields.", Toast.LENGTH_SHORT).show();
             }
@@ -429,8 +437,7 @@ public class BeachActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void saveReviewToFirebase(Beach selectedBeach, String user, Review review, String picUrl) {
-        review.setPicUrl(picUrl);
+    private void saveReviewToFirebase(Beach selectedBeach, String user, Review review) {
         String reviewId = databaseRef.child("reviews").push().getKey();
 
         if (reviewId != null) {
@@ -507,21 +514,18 @@ public class BeachActivity extends AppCompatActivity {
         reviewLayout.addView(reviewRatingBar); // Add RatingBar for individual review
         reviewLayout.addView(reviewTags);
 
-        if (review.getPicUrl() !=null && !review.getPicUrl().isEmpty()){
-            ImageView reviewImageView = new ImageView(this);
-            reviewImageView.setLayoutParams(new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, 300));
-            reviewImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-
-            // Load the image using Glide
-            Glide.with(this)
-                    .load(review.getPicUrl())
-                    .into(reviewImageView);
-
-            // Add the ImageView to the review layout
-            reviewLayout.addView(reviewImageView);
-
+        if (review.getPicUrl() != null && !review.getPicUrl().isEmpty()) {
+            Bitmap decodedImage = decodeBase64ToImage(review.getPicUrl());
+            if (decodedImage != null) {
+                ImageView reviewImageView = new ImageView(this);
+                reviewImageView.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, 300));
+                reviewImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                reviewImageView.setImageBitmap(decodedImage);
+                reviewLayout.addView(reviewImageView);
+            }
         }
+
         View divider = new View(this);
         divider.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2));
         divider.setBackgroundColor(android.R.color.darker_gray);
@@ -599,48 +603,6 @@ public class BeachActivity extends AppCompatActivity {
         }
     }
 
-    private void uploadImageRev (Beach selectedBeach, String user, Review review){
-                if (selectImage != null) {
-                    String fileExtension = getFileExtension(selectImage);  // Get the file extension
-                    StorageReference fileRef = storageReference.child(System.currentTimeMillis() + "." + fileExtension);
-
-                    // Log the file path to check if it's correct
-                    Log.d("FirebaseStorage", "File path: " + fileRef.getPath());
-
-                    fileRef.putFile(selectImage).addOnSuccessListener(taskSnapshot -> {
-                        fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                            String imageUrl = uri.toString();
-                            review.setPicUrl(imageUrl);  // Set the image URL in the review
-                            saveReviewToFirebase(selectedBeach, user, review, imageUrl);
-                            Toast.makeText(BeachActivity.this, "Image uploaded successfully!", Toast.LENGTH_SHORT).show();
-                        }).addOnFailureListener(e -> {
-                            // If the download URL retrieval fails, log the error
-                            Log.e("FirebaseStorage", "Failed to get download URL: " + e.getMessage());
-                            Toast.makeText(BeachActivity.this, "Failed to get image URL.", Toast.LENGTH_SHORT).show();
-                        });
-                    }).addOnFailureListener(e -> {
-                        // Log the error if the file upload fails
-                        Log.e("FirebaseStorage", "Failed to upload image: " + e.getMessage());
-                        Toast.makeText(BeachActivity.this, "Failed to upload image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
-                } else {
-                    // If no image was selected, save the review directly without an image URL
-                    saveReviewToFirebase(selectedBeach, user, review, null);
-                }
-            }
-
-            private String getFileExtension(Uri uri) {
-                String extension;
-                if (uri.getScheme().equals("content")) {
-                    // If the URI is of the "content" type, query the file extension
-                    extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(getContentResolver().getType(uri));
-                } else {
-                    // If the URI is a file path, extract the file extension directly
-                    extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-                }
-                return extension != null ? extension : "jpg"; // Default to "jpg" if extension is not found
-            }
-
             private void reviewImage(String picUrl, LinearLayout imageLayout){
                 ImageView revImageView = new ImageView(this);
                 revImageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 300));
@@ -654,6 +616,24 @@ public class BeachActivity extends AppCompatActivity {
 
                 }
             }
+
+    private String encodeImageToBase64(Uri imageUri) {
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream); // Compress to reduce size
+            byte[] imageBytes = outputStream.toByteArray();
+            return Base64.encodeToString(imageBytes, Base64.DEFAULT);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private Bitmap decodeBase64ToImage(String base64String) {
+        byte[] imageBytes = Base64.decode(base64String, Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+    }
 
     }
 
