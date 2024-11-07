@@ -2,7 +2,11 @@ package com.example.beachplease;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -30,6 +34,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -43,6 +48,8 @@ public class ProfileActivity extends AppCompatActivity {
     private LinearLayout reviewsSection;
     private FirebaseAuth auth;
     private DatabaseReference databaseRef;
+    private static final int IMAGE_REQUEST = 1;
+    private Uri selectImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,10 +139,16 @@ public class ProfileActivity extends AppCompatActivity {
         tagsView.setText("Tags: " + String.join(", ", tags));
         reviewLayout.addView(tagsView);
 
-        if(review.getPicUrl() != null && !review.getPicUrl().isEmpty()){
-            ImageView revImageView = new ImageView(this);
-            Glide.with(this).load(review.getPicUrl()).into(revImageView);
-            reviewLayout.addView(revImageView);
+        if (review.getPicUrl() != null && !review.getPicUrl().isEmpty()) {
+            Bitmap decodedImage = decodeBase64ToImage(review.getPicUrl());
+            if (decodedImage != null) {
+                ImageView reviewImageView = new ImageView(this);
+                reviewImageView.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, 400)); // Adjust height as needed
+                reviewImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                reviewImageView.setImageBitmap(decodedImage);
+                reviewLayout.addView(reviewImageView);
+            }
         }
 
         // Buttons layout for Edit and Delete buttons
@@ -183,6 +196,11 @@ public class ProfileActivity extends AppCompatActivity {
         ratingBar.setNumStars(5);
         ratingBar.setStepSize(0.5f);
         ratingBar.setMax(5);
+
+        Button uploadImageButton = new Button(this);
+        uploadImageButton.setText("Change Image");
+        uploadImageButton.setOnClickListener(v -> openImagePicker()); // Call openImagePicker here
+        layout.addView(uploadImageButton);
 
         float scale = getResources().getDisplayMetrics().density;
         int widthInPx = (int) (totalWidth * scale + 0.5f);
@@ -439,5 +457,41 @@ public class ProfileActivity extends AppCompatActivity {
         startActivity(new Intent(this, LoginActivity.class));
         finish();
     }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            selectImage = data.getData();
+            Toast.makeText(this, "Image selected successfully!", Toast.LENGTH_SHORT).show();
+        } else {
+            Log.d("ImagePicker", "Image selection failed or was cancelled.");
+        }
+    }
+    private void openImagePicker() {
+        Intent imageIntent = new Intent();
+        imageIntent.setType("image/*");
+        imageIntent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(imageIntent, "Select Picture"), IMAGE_REQUEST);
+    }
+    private String encodeImageToBase64(Uri imageUri) {
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream); // Compress to reduce size
+            byte[] imageBytes = outputStream.toByteArray();
+            return Base64.encodeToString(imageBytes, Base64.DEFAULT);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private Bitmap decodeBase64ToImage(String base64String) {
+        byte[] imageBytes = Base64.decode(base64String, Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+    }
+
 }
 
