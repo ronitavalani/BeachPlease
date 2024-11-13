@@ -290,8 +290,6 @@ public class BeachActivity extends AppCompatActivity {
     }
 
     private void displayReviews(String beachId) {
-        reviewContainer.removeAllViews(); // Clear any existing reviews in the container
-
         databaseRef.child("beaches").child(beachId).child("reviews").get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 for (DataSnapshot reviewIdSnapshot : task.getResult().getChildren()) {
@@ -377,15 +375,11 @@ public class BeachActivity extends AppCompatActivity {
         uploadPicButton.setOnClickListener(v -> openImagePicker());
         layout.addView(uploadPicButton);
 
-//        final EditText picUrlInput = new EditText(this);
-//        picUrlInput.setHint("Enter image URL...");
-//        layout.addView(picUrlInput);
-
         final RatingBar ratingBar = new RatingBar(this, null, android.R.attr.ratingBarStyleIndicator);
         ratingBar.setNumStars(5);
         ratingBar.setStepSize(0.5f);
         ratingBar.setMax(5);
-        ratingBar.setIsIndicator(false); // Make it clickable since indicator style is read-only by default
+        ratingBar.setIsIndicator(false);
         ratingBar.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -420,12 +414,10 @@ public class BeachActivity extends AppCompatActivity {
             if (!reviewText.isEmpty() && rating > 0) {
                 Review newReview = new Review(selectedBeach.getName(), rating, date, user, reviewText, new ArrayList<>(selectedTags));
                 if (selectImage != null) {
-                    // Convert the selected image to Base64 and store it in the review
                     String base64Image = encodeImageToBase64(selectImage);
-                    newReview.setPicUrl(base64Image);  // store base64 in the same field
+                    newReview.setPicUrl(base64Image);
                 }
 
-                // Save the review with the Base64-encoded image directly
                 saveReviewToFirebase(selectedBeach, user, newReview);
             } else {
                 Toast.makeText(BeachActivity.this, "Please complete all review fields.", Toast.LENGTH_SHORT).show();
@@ -632,7 +624,7 @@ public class BeachActivity extends AppCompatActivity {
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
     }
 
-    }
+}
 
 
 
