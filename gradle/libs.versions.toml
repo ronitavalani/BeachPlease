@@ -16,6 +16,8 @@ navigationUi = "2.6.0"
 googleGmsGoogleServices = "4.4.2"
 firebaseDatabase = "21.0.0"
 firebaseStorage = "21.0.1"
+rules = "1.6.1"
+runner = "1.6.2"
 
 [libraries]
 firebase-storage-v2010 = { module = "com.google.firebase:firebase-storage", version.ref = "firebaseStorageVersion" }
@@ -33,6 +35,8 @@ navigation-fragment = { group = "androidx.navigation", name = "navigation-fragme
 navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigationUi" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
+rules = { group = "androidx.test", name = "rules", version.ref = "rules" }
+runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
