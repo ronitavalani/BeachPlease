@@ -18,6 +18,7 @@ import androidx.test.rule.ActivityTestRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+//yay!
 //@RunWith(AndroidJUnxit4.class)
 public class RegisterNewEmailTestEspresso {
     @Rule

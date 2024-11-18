@@ -30,6 +30,7 @@ public class RegisterDuplicateEmailTestEspresso {
         scenario.onActivity(activity -> decorView[0] = activity.getWindow().getDecorView());
         return decorView[0];
     }
+    //yay!
 
     @Test
     public void testRegistrationWithDuplicateEmail() {
