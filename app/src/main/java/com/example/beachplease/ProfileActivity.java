@@ -2,7 +2,11 @@ package com.example.beachplease;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -30,6 +34,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -43,6 +48,12 @@ public class ProfileActivity extends AppCompatActivity {
     private LinearLayout reviewsSection;
     private FirebaseAuth auth;
     private DatabaseReference databaseRef;
+    private static final int IMAGE_REQUEST = 1;
+    private Uri selectImage;
+    private Review currentReview;
+    private ImageView currentImageView;
+    private String currentReviewId;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,10 +143,16 @@ public class ProfileActivity extends AppCompatActivity {
         tagsView.setText("Tags: " + String.join(", ", tags));
         reviewLayout.addView(tagsView);
 
-        if(review.getPicUrl() != null && !review.getPicUrl().isEmpty()){
-            ImageView revImageView = new ImageView(this);
-            Glide.with(this).load(review.getPicUrl()).into(revImageView);
-            reviewLayout.addView(revImageView);
+        if (review.getPicUrl() != null && !review.getPicUrl().isEmpty()) {
+            Bitmap decodedImage = decodeBase64ToImage(review.getPicUrl());
+            if (decodedImage != null) {
+                ImageView reviewImageView = new ImageView(this);
+                reviewImageView.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, 400)); // Adjust height as needed
+                reviewImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                reviewImageView.setImageBitmap(decodedImage);
+                reviewLayout.addView(reviewImageView);
+            }
         }
 
         // Buttons layout for Edit and Delete buttons
@@ -161,6 +178,9 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void showEditReviewDialog(Review review, String reviewId) {
+        currentReview = review;
+        currentReviewId = reviewId;
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Edit Review for " + review.getBeachName());
 
@@ -183,6 +203,46 @@ public class ProfileActivity extends AppCompatActivity {
         ratingBar.setNumStars(5);
         ratingBar.setStepSize(0.5f);
         ratingBar.setMax(5);
+
+        currentImageView = new ImageView(this);
+        currentImageView.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 400)); // Set fixed height
+        currentImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+        // Display the current image if it exists
+        if (review.getPicUrl() != null && !review.getPicUrl().isEmpty()) {
+            Bitmap bitmap = decodeBase64ToImage(review.getPicUrl());
+            if (bitmap != null) {
+                currentImageView.setImageBitmap(bitmap);
+            }
+        }
+        layout.addView(currentImageView);
+
+        Button changeImageButton = new Button(this);
+        changeImageButton.setText("Upload/Change Image");
+        changeImageButton.setOnClickListener(v -> {
+            currentReview = review; // Set the current review for image picker
+            openImagePicker();
+        });
+        layout.addView(changeImageButton);
+
+        Button removeImageButton = new Button(this);
+        removeImageButton.setText("Remove Image");
+        removeImageButton.setOnClickListener(v -> {
+            review.setPicUrl(null); // Remove the image from the review object
+            currentImageView.setImageDrawable(null); // Clear the image view
+
+            // Update Firebase immediately to remove the image
+            databaseRef.child("reviews").child(reviewId).child("picUrl").setValue(null)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(this, "Image removed successfully!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "Failed to remove image.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        });
+        layout.addView(removeImageButton);
 
         float scale = getResources().getDisplayMetrics().density;
         int widthInPx = (int) (totalWidth * scale + 0.5f);
@@ -223,10 +283,6 @@ public class ProfileActivity extends AppCompatActivity {
         }
         layout.addView(tagLayout);
 
-        final EditText picUrlInput = new EditText(this);
-        picUrlInput.setHint("Image URL");
-        picUrlInput.setText(review.getPicUrl() !=null ? review.getPicUrl() : "");
-        layout.addView(picUrlInput);
 
         scrollView.addView(layout);
         builder.setView(scrollView);
@@ -235,13 +291,13 @@ public class ProfileActivity extends AppCompatActivity {
             String updatedComment = reviewInput.getText().toString();
             double updatedRating = (double) ratingBar.getRating();
             double oldRating = review.getRating(); // Store old rating
-            String newPicUrl = picUrlInput.getText().toString().trim();
+            //String newPicUrl = picUrlInput.getText().toString().trim();
 
             // Update review object with new data
             review.setComment(updatedComment);
             review.setRating(updatedRating);
             review.setTags(selectedTags);
-            review.setPicUrl(newPicUrl);
+            //review.setPicUrl(newPicUrl);
 
             // Calculate tags that were deselected and newly selected
             Set<String> deselectedTags = new HashSet<>(originalTags);
@@ -439,5 +495,59 @@ public class ProfileActivity extends AppCompatActivity {
         startActivity(new Intent(this, LoginActivity.class));
         finish();
     }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            selectImage = data.getData();
+            if (selectImage != null && currentReview != null) {
+                String base64Image = encodeImageToBase64(selectImage);
+                if (base64Image != null) {
+                    // Update the review object with the new image
+                    currentReview.setPicUrl(base64Image);
+                    Bitmap bitmap = decodeBase64ToImage(base64Image);
+                    if (bitmap != null) {
+                        currentImageView.setImageBitmap(bitmap); // Update the ImageView
+                    }
+                    // Save the new image URL to Firebase
+                    databaseRef.child("reviews").child(currentReviewId).child("picUrl").setValue(base64Image)
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Toast.makeText(this, "Image updated successfully!", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(this, "Failed to update image.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                }
+            }
+        }
+    }
+
+    private void openImagePicker() {
+        Intent imageIntent = new Intent();
+        imageIntent.setType("image/*");
+        imageIntent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(imageIntent, "Select Picture"), IMAGE_REQUEST);
+    }
+    private String encodeImageToBase64(Uri imageUri) {
+        try {
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream); // Compress to reduce size
+            byte[] imageBytes = outputStream.toByteArray();
+            return Base64.encodeToString(imageBytes, Base64.DEFAULT);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private Bitmap decodeBase64ToImage(String base64String) {
+        byte[] imageBytes = Base64.decode(base64String, Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+    }
+
 }
 
