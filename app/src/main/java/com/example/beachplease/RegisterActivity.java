@@ -8,6 +8,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
@@ -50,14 +51,16 @@ public class RegisterActivity extends AppCompatActivity {
 
                    reference.child(userId).setValue(user).addOnCompleteListener(dbTask ->{
                       if (dbTask.isSuccessful()) {
-                          Toast.makeText(this, "User registered successfully!", Toast.LENGTH_SHORT).show();
+                          Snackbar.make(findViewById(android.R.id.content), "User registered successfully!", Snackbar.LENGTH_SHORT).show();
+
+                          //Toast.makeText(this, "User registered successfully!", Toast.LENGTH_SHORT).show();
                           Intent intent = new Intent(this, MainActivity.class);
                           startActivity(intent);
                           finish();
                       }
                       else {
-                          Toast.makeText(this, "Registration failed: " + dbTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
-
+                          //Toast.makeText(this, "Registration failed: " + dbTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                          Snackbar.make(findViewById(android.R.id.content), "Registration failed: " + dbTask.getException().getMessage(), Snackbar.LENGTH_SHORT).show();
                       }
                    });
                }
@@ -65,12 +68,13 @@ public class RegisterActivity extends AppCompatActivity {
            else {
                String errorMessage;
                if (task.getException() instanceof FirebaseAuthUserCollisionException) {
-                   errorMessage = "This email is already registered. Please user another email.";
+                   errorMessage = "This email is already registered. Please use another email.";
                }
                else {
                    errorMessage = "Authentication failed: " + task.getException().getMessage();
                }
-               Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+               Snackbar.make(findViewById(android.R.id.content), errorMessage, Snackbar.LENGTH_SHORT).show();
+               //Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
            }
         });
     }
