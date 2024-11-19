@@ -7,8 +7,10 @@ import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.isRoot;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.example.beachplease.ViewActions.waitFor;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
@@ -18,12 +20,7 @@ import androidx.test.rule.ActivityTestRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-//yay!
-//@RunWith(AndroidJUnxit4.class)
 public class RegisterNewEmailTestEspresso {
-    @Rule
-    public ActivityTestRule<RegisterActivity> activityRule =
-            new ActivityTestRule<>(RegisterActivity.class);
     @Test
     public void testRegistrationWithNewEmail() {
         // Launch the RegisterActivity
@@ -40,9 +37,7 @@ public class RegisterNewEmailTestEspresso {
         // Click the register button
         onView(withId(R.id.register)).perform(click());
 
-        // Check that the success message is displayed
-        onView(withText("User registered successfully!"))
-                .inRoot(withDecorView(not(is(activityRule.getActivity().getWindow().getDecorView()))))
-                .check(matches(isDisplayed()));
+        onView(isRoot()).perform(waitFor(3000));
+        onView(withId(R.id.mapView)).check(matches(isDisplayed()));
     }
 }
