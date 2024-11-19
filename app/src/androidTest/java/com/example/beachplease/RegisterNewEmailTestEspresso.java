@@ -5,19 +5,12 @@ import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.isRoot;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static com.example.beachplease.ViewActions.waitFor;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 
 import androidx.test.core.app.ActivityScenario;
-import androidx.test.rule.ActivityTestRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 public class RegisterNewEmailTestEspresso {
