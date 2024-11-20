@@ -62,7 +62,10 @@ import java.util.Set;
 
 public class BeachActivity extends AppCompatActivity {
     private ImageView beachImage;
-    private TextView beachName, beachBlurb, beachHours, liveWeatherInfo;
+    TextView beachName;
+    private TextView beachBlurb;
+    TextView beachHours;
+    private TextView liveWeatherInfo;
     private LinearLayout tagLayout, reviewContainer;
     private LinearLayout forecastLayout;
     private RatingBar avgRatingBar; // RatingBar for average rating
@@ -121,7 +124,7 @@ public class BeachActivity extends AppCompatActivity {
         addReviewButton.setOnClickListener(v -> showAddReviewDialog(selectedBeach, userId));
     }
 
-    private void populateBeachData(Beach selectedBeach) {
+    void populateBeachData(Beach selectedBeach) {
         beachName.setText(selectedBeach.getName());
         beachBlurb.setText(selectedBeach.getBlurb());
         beachHours.setText("Hours: " + selectedBeach.getHours());
