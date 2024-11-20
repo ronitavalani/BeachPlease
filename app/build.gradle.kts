@@ -51,6 +51,8 @@ dependencies {
     implementation(libs.rules)
     implementation(libs.runner)
     implementation(libs.ext.junit)
+    implementation(libs.espresso.intents)
+    implementation(libs.mockito.core)
     //implementation(libs.firebase.storage.v2010)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
