@@ -3,7 +3,10 @@ package com.example.beachplease;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.isRoot;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+
+import static com.example.beachplease.ViewActions.waitFor;
 
 import androidx.test.core.app.ActivityScenario;
 
@@ -25,6 +28,11 @@ public class BeachPopUpTestEspresso {
                 "Sunrise - Sunset", 3.6666666666666665,
                 "https://images.squarespace-cdn.com/content/v1/5e0e65adcd39ed279a0402fd/1627422658456-7QKPXTNQ34W2OMBTESCJ/1.jpg?format=2500w",
                 "Santa Monica Beach has parks, picnic areas, playgrounds, restrooms, as well as staffed lifeguard stations, the Muscle Beach, bike rentals, concessions, a few hotels, a bike path, and wooden pathways for beachgoers with disabilities.");
+        mockBeach.addTag("Family-Friendly");
+        mockBeach.addTag("Nearby Food Vendors");
+        mockBeach.addTag("Pet-Friendly");
+        mockBeach.addTag("Picnic Areas");
+        mockBeach.addTag("Restrooms Available");
         Mockito.when(mockMarker.getTag()).thenReturn(mockBeach);
 
         // Simulate a marker click in the MainActivity
@@ -37,6 +45,8 @@ public class BeachPopUpTestEspresso {
         String expectedMessage = "Top Tags: Family-Friendly, Nearby Food Vendors\n" +
                 "Hours: Sunrise - Sunset\n\n" +
                 "Would you like to view more details about Santa Monica Beach?";
+
+        onView(isRoot()).perform(waitFor(3000));
         onView(withText(expectedMessage)).check(matches(isDisplayed()));
 
         // Verify the "View" button is displayed
