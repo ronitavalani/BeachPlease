@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
-    private GoogleMap googleMap;
+    public GoogleMap googleMap;
     private boolean[] selectedFilters;
     private String[] filterOptions = {
             "Surfing", "Family-Friendly", "Pet-Friendly", "Picnic Areas", "Restrooms Available",
@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         builder.create().show();
     }
 
-    private void applyFilters() {
+    void applyFilters() {
         for (Marker marker : markers) {
             if (marker.getTag() instanceof Beach) {
                 Beach beach = (Beach) marker.getTag();
@@ -281,5 +281,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log.e("BeachData", "Error Details: " + error.getDetails());
             }
         });
+    }
+
+    public List<Marker> getMarkerList() {
+        return markers; // Expose the list of markers
     }
 }

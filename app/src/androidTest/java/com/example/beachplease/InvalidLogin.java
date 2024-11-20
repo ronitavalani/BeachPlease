@@ -27,14 +27,12 @@ public class InvalidLogin {
 
     @Test
     public void testLoginWithInvalidCredentials() {
-        // Input invalid credentials and click login
         onView(withId(R.id.email)).perform(replaceText("invalid@example.com"));
         onView(withId(R.id.password)).perform(replaceText("wrongPass"));
         onView(withId(R.id.login_button)).perform(click());
 
         onView(isRoot()).perform(waitFor(3000));
 
-        // Verify that the Snackbar message is displayed
         String expectedMessage = "Login failed. Please try again.";
         onView(withText(expectedMessage)).check(matches(isDisplayed()));
     }
