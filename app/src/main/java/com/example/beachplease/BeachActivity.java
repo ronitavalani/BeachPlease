@@ -17,7 +17,6 @@ import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.net.Uri;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -30,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -300,7 +300,7 @@ public class BeachActivity extends AppCompatActivity {
                     }
                 }
             } else {
-                Toast.makeText(BeachActivity.this, "Failed to load reviews.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Failed to load reviews.", Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -335,7 +335,7 @@ public class BeachActivity extends AppCompatActivity {
                     fetchAuthorDetails(review.getAuthor(), review);
                 }
             } else {
-                Toast.makeText(BeachActivity.this, "Failed to retrieve review details.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Failed to retrieved review details.", Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -420,7 +420,7 @@ public class BeachActivity extends AppCompatActivity {
 
                 saveReviewToFirebase(selectedBeach, user, newReview);
             } else {
-                Toast.makeText(BeachActivity.this, "Please complete all review fields.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Please complete all review fields.", Snackbar.LENGTH_SHORT).show();
             }
         });
         builder.setNegativeButton("Cancel", null);
@@ -438,9 +438,9 @@ public class BeachActivity extends AppCompatActivity {
                     updateBeachTags(selectedBeach, review.getTags());
                     updateUserReviewReference(user, reviewId);
                     displayReviews(selectedBeach.getName());
-                    Toast.makeText(BeachActivity.this, "Review added!", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Review added!", Snackbar.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(BeachActivity.this, "Failed to save review.", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Failed to save review.", Snackbar.LENGTH_SHORT).show();
                 }
             });
         }
@@ -460,7 +460,7 @@ public class BeachActivity extends AppCompatActivity {
                 avgRatingBar.setStepSize(0.5f); // Set step size
                 avgRatingBar.setRating((float) avgRating); // Explicitly cast to float
             } else {
-                Toast.makeText(BeachActivity.this, "Failed to retrieve review rating.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Failed to retrieve review rating.", Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -553,7 +553,7 @@ public class BeachActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(BeachActivity.this, "Failed to update beach tags.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Failed to update Beach Tags", Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -586,7 +586,7 @@ public class BeachActivity extends AppCompatActivity {
             selectImage = data.getData();
             // Log the selected image URI to confirm it's correct
             Log.d("ImagePicker", "Selected Image URI: " + selectImage.toString());
-            Toast.makeText(this, "Image selected successfully!!", Toast.LENGTH_SHORT).show();
+            Snackbar.make(findViewById(android.R.id.content), "Image Selected Successfully!", Snackbar.LENGTH_SHORT).show();
         } else {
             Log.d("ImagePicker", "Image selection failed.");
         }
