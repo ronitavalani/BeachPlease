@@ -33,9 +33,15 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 dependencies {
+    // Existing Firebase and core dependencies
     implementation("com.google.firebase:firebase-auth:22.1.1")
     implementation("com.google.firebase:firebase-database:21.0.0")
     implementation(libs.appcompat)
@@ -47,18 +53,26 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation("com.google.android.gms:play-services-maps:19.0.0")
     implementation(libs.firebase.storage)
-    implementation(libs.espresso.core)
-    implementation(libs.rules)
-    implementation(libs.runner)
-    implementation(libs.ext.junit)
-    implementation(libs.espresso.intents)
-    implementation(libs.mockito.core)
-    implementation(libs.mockito.android)
-    //implementation(libs.firebase.storage.v2010)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.ext.junit)
-    androidTestImplementation(libs.espresso.core)
     implementation("com.github.bumptech.glide:glide:4.14.2")
     annotationProcessor("com.github.bumptech.glide:compiler:4.14.2")
 
+    // Testing dependencies - moved from implementation to testImplementation
+    testImplementation(libs.junit)
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.mockito:mockito-core:5.14.2")
+    testImplementation("org.mockito:mockito-inline:5.1.0")
+    testImplementation("org.robolectric:robolectric:4.13")
+    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("androidx.test:runner:1.5.0")
+    testImplementation("androidx.test.ext:junit:1.1.5")
+    testImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    testImplementation("androidx.test.espresso:espresso-intents:3.5.1")
+
+    // Instrumentation test dependencies
+    androidTestImplementation(libs.ext.junit)
+    androidTestImplementation(libs.espresso.core)
+    androidTestImplementation("org.mockito:mockito-android:5.14.2")
+    androidTestImplementation("androidx.test:runner:1.5.0")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
 }
