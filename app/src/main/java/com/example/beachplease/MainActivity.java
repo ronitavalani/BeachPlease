@@ -7,9 +7,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -19,20 +16,12 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import android.os.StrictMode;
-import android.util.Log;
-import android.widget.TextView;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -41,7 +30,7 @@ import java.util.stream.Collectors;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
-    private GoogleMap googleMap;
+    public GoogleMap googleMap;
     private boolean[] selectedFilters;
     private String[] filterOptions = {
             "Surfing", "Family-Friendly", "Pet-Friendly", "Picnic Areas", "Restrooms Available",
@@ -122,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         builder.create().show();
     }
 
-    private void applyFilters() {
+    void applyFilters() {
         for (Marker marker : markers) {
             if (marker.getTag() instanceof Beach) {
                 Beach beach = (Beach) marker.getTag();
@@ -155,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 marker.setVisible(matchesFilters);
             }
         }
-        Toast.makeText(this, "Filters Applied", Toast.LENGTH_SHORT).show();
+        Snackbar.make(findViewById(android.R.id.content), "Filters Applied", Snackbar.LENGTH_SHORT).show();
     }
 
     @Override
@@ -281,5 +270,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log.e("BeachData", "Error Details: " + error.getDetails());
             }
         });
+    }
+
+    public List<Marker> getMarkerList() {
+        return markers; // Expose the list of markers
     }
 }

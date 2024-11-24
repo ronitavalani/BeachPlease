@@ -15,6 +15,7 @@ import com.google.android.gms.maps.model.Marker;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+
 public class BeachPopUpTestEspresso {
 
     @Test
