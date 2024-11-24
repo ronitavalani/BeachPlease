@@ -20,9 +20,18 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 public class LoginActivity extends AppCompatActivity {
-    private EditText emailField;
-    private EditText passwordField;
+    EditText emailField;
+    EditText passwordField;
     private DatabaseReference reference;
+    private FirebaseAuth auth;
+
+    public LoginActivity() {
+        this.auth = FirebaseAuth.getInstance();
+    }
+
+    public LoginActivity(FirebaseAuth mockAuth) {
+        this.auth = mockAuth;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
