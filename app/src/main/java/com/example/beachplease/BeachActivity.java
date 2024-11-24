@@ -59,6 +59,7 @@ import java.util.Locale;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BeachActivity extends AppCompatActivity {
     private ImageView beachImage;
@@ -430,8 +431,9 @@ public class BeachActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void saveReviewToFirebase(Beach selectedBeach, String user, Review review) {
+    AtomicBoolean saveReviewToFirebase(Beach selectedBeach, String user, Review review) {
         String reviewId = databaseRef.child("reviews").push().getKey();
+        AtomicBoolean saved = new AtomicBoolean(false);
 
         if (reviewId != null) {
             databaseRef.child("reviews").child(reviewId).setValue(review).addOnCompleteListener(task -> {
@@ -442,11 +444,13 @@ public class BeachActivity extends AppCompatActivity {
                     updateUserReviewReference(user, reviewId);
                     displayReviews(selectedBeach.getName());
                     Snackbar.make(findViewById(android.R.id.content), "Review added!", Snackbar.LENGTH_SHORT).show();
+                    saved.set(true);
                 } else {
                     Snackbar.make(findViewById(android.R.id.content), "Failed to save review.", Snackbar.LENGTH_SHORT).show();
                 }
             });
         }
+        return saved;
     }
 
     private void updateRating(Beach beach, double newRating) {
