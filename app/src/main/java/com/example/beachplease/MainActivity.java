@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             "Scenic Views"
     };
     private List<Marker> markers = new ArrayList<>();
-    private List<String> filters = new ArrayList<>();
+    List<String> filters = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
