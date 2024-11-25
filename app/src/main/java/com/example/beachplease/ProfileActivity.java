@@ -46,8 +46,8 @@ public class ProfileActivity extends AppCompatActivity {
     private TextView userNameTextView;
     private TextView userEmailTextView;
 
-    private FirebaseAuth auth;
-    private DatabaseReference databaseRef;
+    FirebaseAuth auth;
+    DatabaseReference databaseRef;
 
     private LinearLayout reviewsSection;
    
