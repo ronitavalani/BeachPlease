@@ -78,8 +78,9 @@ public class BeachActivity extends AppCompatActivity {
     private StorageReference storageReference;
     private android.webkit.MimeTypeMap MimeTypeMap;
 
-    public BeachActivity(DatabaseReference reference) {
+    public BeachActivity(DatabaseReference reference, LinearLayout tagLayout) {
         this.databaseRef = reference;
+        this.tagLayout = tagLayout;
     }
 
     public BeachActivity() {
@@ -141,7 +142,7 @@ public class BeachActivity extends AppCompatActivity {
         displayTags(selectedBeach);
     }
 
-    private void displayTags(Beach selectedBeach) {
+    void displayTags(Beach selectedBeach) {
         DatabaseReference tagsRef = databaseRef.child("beaches").child(selectedBeach.getName()).child("tags");
 
         tagsRef.get().addOnCompleteListener(task -> {
@@ -536,7 +537,7 @@ public class BeachActivity extends AppCompatActivity {
         reviewContainer.addView(divider);
     }
 
-    private void updateBeachTags(Beach selectedBeach, List<String> newTags) {
+    public void updateBeachTags(Beach selectedBeach, List<String> newTags) {
         DatabaseReference beachTagsRef = databaseRef.child("beaches").child(selectedBeach.getName()).child("tags");
 
         beachTagsRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -639,6 +640,10 @@ public class BeachActivity extends AppCompatActivity {
 
     public FirebaseStorage getFirebaseStorageInstance() {
         return FirebaseStorage.getInstance();
+    }
+
+    public void setDatabaseReference(DatabaseReference mockDatabaseReference) {
+        this.databaseRef = mockDatabaseReference;
     }
 }
 
