@@ -159,7 +159,11 @@ public class Beach implements Parcelable {
 
     public void updateAvgRating(Double rating) {
         int reviewCount = getReviews().size();
-        avgRating = ((avgRating * reviewCount) + rating) / (reviewCount + 1);
+        if (reviewCount == 0 || avgRating == null) {
+            avgRating = rating;
+        } else {
+            avgRating = ((avgRating * reviewCount) + rating) / (reviewCount + 1);
+        }
     }
 
     public void addBeachToFirebase() {

@@ -45,7 +45,7 @@ import java.util.Set;
 public class ProfileActivity extends AppCompatActivity {
     private TextView userNameTextView;
     private TextView userEmailTextView;
-    private LinearLayout reviewsSection;
+    LinearLayout reviewsSection;
     private FirebaseAuth auth;
     private DatabaseReference databaseRef;
     private static final int IMAGE_REQUEST = 1;
@@ -116,7 +116,11 @@ public class ProfileActivity extends AppCompatActivity {
         });
     }
 
-    private void displayReview(Review review, String reviewId) {
+    boolean displayReview(Review review, String reviewId) {
+        if (review == null) {
+            return false; // Return false if the review is null
+        }
+
         LinearLayout reviewLayout = new LinearLayout(this);
         reviewLayout.setOrientation(LinearLayout.VERTICAL);
         reviewLayout.setPadding(16, 16, 16, 16);
@@ -153,6 +157,8 @@ public class ProfileActivity extends AppCompatActivity {
                 reviewImageView.setImageBitmap(decodedImage);
                 reviewLayout.addView(reviewImageView);
             }
+
+
         }
 
         // Buttons layout for Edit and Delete buttons
@@ -175,6 +181,8 @@ public class ProfileActivity extends AppCompatActivity {
 
         reviewLayout.addView(buttonLayout);
         reviewsSection.addView(reviewLayout);
+
+        return true;
     }
 
     private void showEditReviewDialog(Review review, String reviewId) {
