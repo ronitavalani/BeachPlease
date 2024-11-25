@@ -54,6 +54,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:19.0.0")
     implementation(libs.firebase.storage)
     implementation("com.github.bumptech.glide:glide:4.14.2")
+    implementation(libs.robolectric)
     annotationProcessor("com.github.bumptech.glide:compiler:4.14.2")
 
     // Testing dependencies - moved from implementation to testImplementation
@@ -61,7 +62,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:5.14.2")
     testImplementation("org.mockito:mockito-inline:5.1.0")
-    testImplementation("org.robolectric:robolectric:4.13")
+    testImplementation("org.robolectric:robolectric:4.14.1")
     testImplementation("androidx.test:core:1.5.0")
     testImplementation("androidx.test:runner:1.5.0")
     testImplementation("androidx.test.ext:junit:1.1.5")

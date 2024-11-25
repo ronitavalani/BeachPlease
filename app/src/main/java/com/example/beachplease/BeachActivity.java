@@ -72,11 +72,18 @@ public class BeachActivity extends AppCompatActivity {
     private RatingBar avgRatingBar; // RatingBar for average rating
     private static final String API_KEY = "60656159d401dedb2ab28b487e8bd931";
     private static final int IMAGE_REQUEST = 1;
-    private DatabaseReference databaseRef;
+    DatabaseReference databaseRef;
     private Set<String> loadedReviewIds = new HashSet<>(); // Track loaded reviews
     private Uri selectImage;
     private StorageReference storageReference;
     private android.webkit.MimeTypeMap MimeTypeMap;
+
+    public BeachActivity(DatabaseReference reference) {
+        this.databaseRef = reference;
+    }
+
+    public BeachActivity() {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,8 +92,6 @@ public class BeachActivity extends AppCompatActivity {
 
         // Initialize storageReference to the "images" folder in Firebase Storage
         storageReference = FirebaseStorage.getInstance().getReference().child("images");
-
-
 
         Beach selectedBeach = getIntent().getParcelableExtra("selectedBeach");
         databaseRef = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/").getReference();
@@ -432,11 +437,12 @@ public class BeachActivity extends AppCompatActivity {
     }
 
     AtomicBoolean saveReviewToFirebase(Beach selectedBeach, String user, Review review) {
-        String reviewId = databaseRef.child("reviews").push().getKey();
+        DatabaseReference reviewsRef = databaseRef.child("reviews");
+        String reviewId = reviewsRef.push().getKey();
         AtomicBoolean saved = new AtomicBoolean(false);
 
         if (reviewId != null) {
-            databaseRef.child("reviews").child(reviewId).setValue(review).addOnCompleteListener(task -> {
+            reviewsRef.child(reviewId).setValue(review).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     updateBeachReviewReference(selectedBeach, reviewId);
                     updateRating(selectedBeach, review.getRating());
@@ -631,6 +637,9 @@ public class BeachActivity extends AppCompatActivity {
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
     }
 
+    public FirebaseStorage getFirebaseStorageInstance() {
+        return FirebaseStorage.getInstance();
+    }
 }
 
 

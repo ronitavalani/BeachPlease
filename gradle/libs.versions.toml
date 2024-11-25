@@ -21,6 +21,7 @@ runner = "1.6.2"
 espressoIntents = "3.6.1"
 mockitoCore = "5.14.2"
 mockitoAndroid = "5.14.2"
+robolectric = "4.14.1"
 
 [libraries]
 firebase-storage-v2010 = { module = "com.google.firebase:firebase-storage", version.ref = "firebaseStorageVersion" }
@@ -43,6 +44,7 @@ runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
 espresso-intents = { group = "androidx.test.espresso", name = "espresso-intents", version.ref = "espressoIntents" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockitoCore" }
 mockito-android = { group = "org.mockito", name = "mockito-android", version.ref = "mockitoAndroid" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

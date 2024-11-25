@@ -1,7 +1,9 @@
 package com.example.beachplease;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -23,8 +25,18 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText emailField;
     private EditText passwordField;
     private EditText nameField;
-    private DatabaseReference reference;
-    private FirebaseAuth auth;
+    DatabaseReference reference;
+    FirebaseAuth auth;
+
+    public RegisterActivity(FirebaseAuth auth, DatabaseReference reference) {
+        this.auth = auth;
+        this.reference = reference;
+    }
+
+    // Default constructor for Robolectric and normal app usage
+    public RegisterActivity() {
+        this(FirebaseAuth.getInstance(), FirebaseDatabase.getInstance().getReference("users"));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,13 +47,18 @@ public class RegisterActivity extends AppCompatActivity {
         passwordField = findViewById(R.id.password);
         nameField = findViewById(R.id.name);
 
-        FirebaseDatabase root = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/");
-        reference = root.getReference("users");
-        auth = FirebaseAuth.getInstance();
+        if (reference == null) {
+            FirebaseDatabase root = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/");
+            reference = root.getReference("users");
+        }
+
+        if (auth == null) {
+            auth = FirebaseAuth.getInstance();
+        }
 
     }
 
-    private void registerUser(String email, String password, String name) {
+    public void registerUser(String email, String password, String name) {
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
            if (task.isSuccessful()) {
                FirebaseUser fbUser = auth.getCurrentUser();
@@ -51,9 +68,7 @@ public class RegisterActivity extends AppCompatActivity {
 
                    reference.child(userId).setValue(user).addOnCompleteListener(dbTask ->{
                       if (dbTask.isSuccessful()) {
-                          Snackbar.make(findViewById(android.R.id.content), "User registered successfully!", Snackbar.LENGTH_SHORT).show();
 
-                          //Toast.makeText(this, "User registered successfully!", Toast.LENGTH_SHORT).show();
                           Intent intent = new Intent(this, MainActivity.class);
                           startActivity(intent);
                           finish();
