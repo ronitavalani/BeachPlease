@@ -459,7 +459,7 @@ public class BeachActivity extends AppCompatActivity {
         return saved;
     }
 
-    private void updateRating(Beach beach, double newRating) {
+    void updateRating(Beach beach, double newRating) {
         DatabaseReference beachRef = databaseRef.child("beaches").child(beach.getName());
         beachRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult().exists()) {
@@ -619,7 +619,7 @@ public class BeachActivity extends AppCompatActivity {
                 }
             }
 
-    private String encodeImageToBase64(Uri imageUri) {
+    String encodeImageToBase64(Uri imageUri) {
         try {
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
