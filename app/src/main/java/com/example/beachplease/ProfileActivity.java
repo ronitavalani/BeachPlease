@@ -18,7 +18,6 @@ import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.net.Uri;
 
 
@@ -26,6 +25,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -46,8 +46,8 @@ public class ProfileActivity extends AppCompatActivity {
     private TextView userNameTextView;
     private TextView userEmailTextView;
     private LinearLayout reviewsSection;
-    private FirebaseAuth auth;
-    private DatabaseReference databaseRef;
+    FirebaseAuth auth;
+    DatabaseReference databaseRef;
     private static final int IMAGE_REQUEST = 1;
     private Uri selectImage;
     private Review currentReview;
@@ -75,7 +75,7 @@ public class ProfileActivity extends AppCompatActivity {
             displayUserInfo(userId);
             loadUserReviews(userId);
         } else {
-            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
+            Snackbar.make(findViewById(android.R.id.content), "User not logged in", Snackbar.LENGTH_SHORT).show();
         }
 
         findViewById(R.id.mapTab).setOnClickListener(v -> navigateTo(MainActivity.class));
@@ -94,7 +94,7 @@ public class ProfileActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(ProfileActivity.this, "Failed to load reviews.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Failed to Load Review", Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -111,7 +111,7 @@ public class ProfileActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(ProfileActivity.this, "Failed to load review details.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Failed to load review details", Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -236,9 +236,9 @@ public class ProfileActivity extends AppCompatActivity {
             databaseRef.child("reviews").child(reviewId).child("picUrl").setValue(null)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            Toast.makeText(this, "Image removed successfully!", Toast.LENGTH_SHORT).show();
+                            Snackbar.make(findViewById(android.R.id.content), "Image Removed Successfully", Snackbar.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(this, "Failed to remove image.", Toast.LENGTH_SHORT).show();
+                            Snackbar.make(findViewById(android.R.id.content), "Failed to remove image", Snackbar.LENGTH_SHORT).show();
                         }
                     });
         });
@@ -314,10 +314,10 @@ public class ProfileActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void updateReviewInFirebase(String reviewId, Review review, Set<String> deselectedTags, Set<String> newTags, String beachName) {
+    void updateReviewInFirebase(String reviewId, Review review, Set<String> deselectedTags, Set<String> newTags, String beachName) {
         databaseRef.child("reviews").child(reviewId).setValue(review).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                Toast.makeText(ProfileActivity.this, "Review updated successfully!", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Review updated Successfully", Snackbar.LENGTH_SHORT).show();
 
                 // Update tags for the associated beach
                 updateBeachTags(beachName, deselectedTags, newTags);
@@ -325,7 +325,7 @@ public class ProfileActivity extends AppCompatActivity {
                 reviewsSection.removeAllViews(); // Clear current reviews
                 loadUserReviews(auth.getCurrentUser().getUid()); // Reload updated reviews
             } else {
-                Toast.makeText(ProfileActivity.this, "Failed to update review.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Failed to update review", Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -347,14 +347,14 @@ public class ProfileActivity extends AppCompatActivity {
                                     databaseRef.child("users").child(userId).child("reviews").child(reviewId).removeValue();
                                     databaseRef.child("beaches").child(beachName).child("reviews").child(reviewId).removeValue();
 
-                                    Toast.makeText(ProfileActivity.this, "Review deleted successfully!", Toast.LENGTH_SHORT).show();
+                                    Snackbar.make(findViewById(android.R.id.content), "Review updated successfully", Snackbar.LENGTH_SHORT).show();
                                     reviewsSection.removeAllViews();
                                     loadUserReviews(userId);
 
                                     updateBeachTags(beachName, tagsToRemove, new HashSet<>());
                                     updateDeletedRating(beachName, deletedRating); // Update rating after delete
                                 } else {
-                                    Toast.makeText(ProfileActivity.this, "Failed to delete review.", Toast.LENGTH_SHORT).show();
+                                    Snackbar.make(findViewById(android.R.id.content), "Failed to delete review", Snackbar.LENGTH_SHORT).show();
                                 }
                             });
                         }
@@ -382,7 +382,7 @@ public class ProfileActivity extends AppCompatActivity {
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-                    Toast.makeText(ProfileActivity.this, "Failed to update tag count.", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Failed to update tag count", Snackbar.LENGTH_SHORT).show();
                 }
             });
         }
@@ -401,7 +401,7 @@ public class ProfileActivity extends AppCompatActivity {
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-                    Toast.makeText(ProfileActivity.this, "Failed to update tag count.", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(findViewById(android.R.id.content), "Failed to update tag count", Snackbar.LENGTH_SHORT).show();
                 }
             });
         }
@@ -423,7 +423,7 @@ public class ProfileActivity extends AppCompatActivity {
                 // Update Firebase with the new average rating
                 beachRef.child("avgRating").setValue(avgRating);
             } else {
-                Toast.makeText(ProfileActivity.this, "Failed to update rating after edit.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Failed to update rating after edit", Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -453,7 +453,7 @@ public class ProfileActivity extends AppCompatActivity {
                     beachRef.child("avgRating").setValue(0.0);
                 }
             } else {
-                Toast.makeText(ProfileActivity.this, "Failed to update rating after delete.", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Failed to update rating after delete", Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -485,7 +485,7 @@ public class ProfileActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(ProfileActivity.this, "Failed to load user info", Toast.LENGTH_SHORT).show();
+                Snackbar.make(findViewById(android.R.id.content), "Failed to load user info", Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -515,9 +515,9 @@ public class ProfileActivity extends AppCompatActivity {
                     databaseRef.child("reviews").child(currentReviewId).child("picUrl").setValue(base64Image)
                             .addOnCompleteListener(task -> {
                                 if (task.isSuccessful()) {
-                                    Toast.makeText(this, "Image updated successfully!", Toast.LENGTH_SHORT).show();
+                                    Snackbar.make(findViewById(android.R.id.content), "Image Updated Successfully", Snackbar.LENGTH_SHORT).show();
                                 } else {
-                                    Toast.makeText(this, "Failed to update image.", Toast.LENGTH_SHORT).show();
+                                    Snackbar.make(findViewById(android.R.id.content), "Failed to update image", Snackbar.LENGTH_SHORT).show();
                                 }
                             });
                 }
