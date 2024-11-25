@@ -41,16 +41,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ProfileActivity extends AppCompatActivity {
     private TextView userNameTextView;
     private TextView userEmailTextView;
-
-    FirebaseAuth auth;
-    DatabaseReference databaseRef;
-
     private LinearLayout reviewsSection;
-   
+    private FirebaseAuth auth;
+    private DatabaseReference databaseRef;
+    private DatabaseReference usersRef;
+
     private static final int IMAGE_REQUEST = 1;
     private Uri selectImage;
     private Review currentReview;
@@ -71,6 +71,7 @@ public class ProfileActivity extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = auth.getCurrentUser();
         databaseRef = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/").getReference();
+        usersRef = databaseRef.child("users").child(currentUser.getUid());
 
         // Display user information
         if (currentUser != null) {
@@ -86,7 +87,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void loadUserReviews(String userId) {
-        databaseRef.child("users").child(userId).child("reviews").addListenerForSingleValueEvent(new ValueEventListener() {
+        usersRef.child("reviews").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for (DataSnapshot reviewSnapshot : snapshot.getChildren()) {
@@ -341,7 +342,8 @@ public class ProfileActivity extends AppCompatActivity {
         });
     }
 
-    private void deleteReview(String reviewId, String beachName) {
+    public boolean deleteReview(String reviewId, String beachName) {
+        AtomicBoolean success = new AtomicBoolean(false);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Delete Review")
                 .setMessage("Are you sure you want to delete this review?")
@@ -364,6 +366,7 @@ public class ProfileActivity extends AppCompatActivity {
 
                                     updateBeachTags(beachName, tagsToRemove, new HashSet<>());
                                     updateDeletedRating(beachName, deletedRating); // Update rating after delete
+                                    success.set(true);
                                 } else {
                                     Snackbar.make(findViewById(android.R.id.content), "Failed to delete review", Snackbar.LENGTH_SHORT).show();
                                 }
@@ -373,6 +376,7 @@ public class ProfileActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("No", null)
                 .show();
+        return success.get();
     }
 
 
@@ -477,7 +481,6 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void displayUserInfo(String userId) {
-        DatabaseReference usersRef = databaseRef.child("users").child(userId);
         usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
