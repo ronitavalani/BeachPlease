@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation("com.github.bumptech.glide:glide:4.14.2")
     implementation(libs.robolectric)
+    implementation(libs.core)
     annotationProcessor("com.github.bumptech.glide:compiler:4.14.2")
 
     // Testing dependencies - moved from implementation to testImplementation
