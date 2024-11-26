@@ -29,7 +29,6 @@ public class MapVisibilityTest {
         final CountDownLatch latch = new CountDownLatch(1);
         final boolean[] areMarkersLoaded = {false};
 
-        // Launch MainActivity
         ActivityScenario.launch(MainActivity.class).onActivity(activity -> {
             SupportMapFragment mapFragment = (SupportMapFragment) activity.getSupportFragmentManager()
                     .findFragmentById(R.id.mapView);
@@ -37,12 +36,11 @@ public class MapVisibilityTest {
             if (mapFragment != null) {
                 mapFragment.getMapAsync(googleMap -> {
                     googleMap.setOnMapLoadedCallback(() -> {
-                        // Wait for Firebase markers to load
                         activity.runOnUiThread(() -> {
                             List<Marker> markers = activity.getMarkerList();
                             if (markers != null && !markers.isEmpty()) {
-                                areMarkersLoaded[0] = true; // Markers have been loaded
-                                latch.countDown(); // Signal that the test can proceed
+                                areMarkersLoaded[0] = true;
+                                latch.countDown();
                             }
                         });
                     });
@@ -52,7 +50,6 @@ public class MapVisibilityTest {
             }
         });
 
-        // Wait for markers to be loaded (up to 15 seconds)
         boolean markersLoaded = latch.await(15, TimeUnit.SECONDS);
         assertTrue("Map or markers did not load in time", markersLoaded && areMarkersLoaded[0]);
     }
