@@ -28,7 +28,6 @@ public class FilterTest {
     @Test
     public void testApplyFilterWithTestBeaches() {
         activityRule.getScenario().onActivity(activity -> {
-            // Step 1: Add test beaches
             Beach testBeach1 = new Beach("Test Beach 1", -118.2437, 34.0522, "8AM - 6PM", 4.5, "", "Test beach for surfing");
             testBeach1.addTag("Surfing");
             testBeach1.addTag("Family-Friendly");
@@ -37,7 +36,6 @@ public class FilterTest {
             testBeach2.addTag("Picnic Areas");
 
             activity.runOnUiThread(() -> {
-                // Add these beaches as markers on the map
                 Marker marker1 = activity.googleMap.addMarker(
                         new MarkerOptions().position(new LatLng(testBeach1.getLatitude(), testBeach1.getLongitude()))
                                 .title(testBeach1.getName()));
@@ -52,25 +50,20 @@ public class FilterTest {
             });
         });
 
-        // Step 2: Open filter popup
         onView(withId(R.id.filterButton)).perform(ViewActions.click());
 
-        // Step 3: Select "Surfing" filter
         onView(withText("Surfing")).perform(ViewActions.click());
 
-        // Step 4: Apply the filter
         onView(withText("Apply")).perform(ViewActions.click());
 
-        // Verify marker visibility
         activityRule.getScenario().onActivity(activity -> {
             activity.runOnUiThread(() -> {
                 Marker marker1 = activity.getMarkerList().get(0);
-                assertTrue(marker1.isVisible()); // Test Beach 1 should be visible
+                assertTrue(marker1.isVisible());
 
                 Marker marker2 = activity.getMarkerList().get(1);
-                assertTrue(!marker2.isVisible()); // Test Beach 2 should not be visible
+                assertTrue(!marker2.isVisible());
 
-                // Clean up markers
                 activity.googleMap.clear();
                 activity.getMarkerList().clear();
             });

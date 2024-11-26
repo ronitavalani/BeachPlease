@@ -43,21 +43,19 @@ public class LosAngelesLocationTest {
 
     @Test
     public void mapLoadsAtLosAngelesCenter() {
-        // Wait for the map to initialize (use IdlingResource for better testing practice)
         try {
-            Thread.sleep(3000); // Simulate waiting for map to load
+            Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        // Ensure access to GoogleMap is performed on the main thread
         Handler mainHandler = new Handler(Looper.getMainLooper());
         mainHandler.post(() -> {
             if (googleMap != null) {
                 LatLng mapCenter = googleMap.getCameraPosition().target;
 
-                // Verify that the map's center is close to Los Angeles coordinates
-                double delta = 0.01; // Allow for slight deviations due to map rendering
+
+                double delta = 0.01;
                 MatcherAssert.assertThat(
                         "Map center latitude is incorrect",
                         Math.abs(mapCenter.latitude - LOS_ANGELES_COORDINATES.latitude) < delta
