@@ -215,6 +215,7 @@ public class ProfileActivity extends AppCompatActivity {
         ratingBar.setNumStars(5);
         ratingBar.setStepSize(0.5f);
         ratingBar.setMax(5);
+        ratingBar.setRating(review.getRating().floatValue());
 
         currentImageView = new ImageView(this);
         currentImageView.setLayoutParams(new LinearLayout.LayoutParams(
@@ -226,9 +227,9 @@ public class ProfileActivity extends AppCompatActivity {
             Bitmap bitmap = decodeBase64ToImage(review.getPicUrl());
             if (bitmap != null) {
                 currentImageView.setImageBitmap(bitmap);
+                layout.addView(currentImageView);
             }
         }
-        layout.addView(currentImageView);
 
         Button changeImageButton = new Button(this);
         changeImageButton.setText("Upload/Change Image");
@@ -303,13 +304,11 @@ public class ProfileActivity extends AppCompatActivity {
             String updatedComment = reviewInput.getText().toString();
             double updatedRating = (double) ratingBar.getRating();
             double oldRating = review.getRating(); // Store old rating
-            //String newPicUrl = picUrlInput.getText().toString().trim();
 
             // Update review object with new data
             review.setComment(updatedComment);
             review.setRating(updatedRating);
             review.setTags(selectedTags);
-            //review.setPicUrl(newPicUrl);
 
             // Calculate tags that were deselected and newly selected
             Set<String> deselectedTags = new HashSet<>(originalTags);

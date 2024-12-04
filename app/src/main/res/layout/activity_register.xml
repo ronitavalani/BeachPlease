@@ -49,4 +49,13 @@
         android:padding = "12dp"
         android:onClick="registerClick"/>
 
+    <TextView
+        android:id="@+id/signup_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text = "I already have an account."
+        android:textColor = "#0E76A8"
+        android:paddingTop = "16dp"
+        android:onClick="loginClick"/>
+
 </LinearLayout>
