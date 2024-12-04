@@ -47,9 +47,9 @@ public class ProfileActivity extends AppCompatActivity {
     private TextView userNameTextView;
     private TextView userEmailTextView;
     private LinearLayout reviewsSection;
-    private FirebaseAuth auth;
-    private DatabaseReference databaseRef;
-    private DatabaseReference usersRef;
+    protected FirebaseAuth auth;
+    protected DatabaseReference databaseRef;
+    protected DatabaseReference usersRef;
 
     private static final int IMAGE_REQUEST = 1;
     private Uri selectImage;

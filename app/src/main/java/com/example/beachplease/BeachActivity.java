@@ -83,6 +83,10 @@ public class BeachActivity extends AppCompatActivity {
         this.tagLayout = tagLayout;
     }
 
+    public BeachActivity(DatabaseReference reference) {
+        this.databaseRef = reference;
+    }
+
     public BeachActivity() {
     }
 
