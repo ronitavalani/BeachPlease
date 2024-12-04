@@ -74,7 +74,6 @@ public class RegisterActivity extends AppCompatActivity {
                           finish();
                       }
                       else {
-                          //Toast.makeText(this, "Registration failed: " + dbTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
                           Snackbar.make(findViewById(android.R.id.content), "Registration failed: " + dbTask.getException().getMessage(), Snackbar.LENGTH_SHORT).show();
                       }
                    });
@@ -89,7 +88,6 @@ public class RegisterActivity extends AppCompatActivity {
                    errorMessage = "Authentication failed: " + task.getException().getMessage();
                }
                Snackbar.make(findViewById(android.R.id.content), errorMessage, Snackbar.LENGTH_SHORT).show();
-               //Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
            }
         });
     }
@@ -105,5 +103,11 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
         registerUser(email, password, name);
+    }
+
+    public void loginClick(android.view.View view) {
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
     }
 }
