@@ -13,11 +13,9 @@ public class Review {
     private List<String> tags;
     private String picUrl;
 
-    // No-argument constructor required for Firebase
     public Review() {
     }
 
-    // Full constructor
     public Review(String beachName, Double rating, Date date, String author, String comment, ArrayList<String> tags) {
         this.beachName = beachName;
         this.rating = rating;
@@ -25,10 +23,8 @@ public class Review {
         this.author = author;
         this.comment = comment;
         this.tags = tags;
-        //this.picUrl = picUrl;
     }
 
-    // Getters and setters
     public String getBeachName() {
         return beachName;
     }

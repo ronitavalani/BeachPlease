@@ -33,7 +33,6 @@ public class RegisterActivity extends AppCompatActivity {
         this.reference = reference;
     }
 
-    // Default constructor for Robolectric and normal app usage
     public RegisterActivity() {
         this(FirebaseAuth.getInstance(), FirebaseDatabase.getInstance().getReference("users"));
     }
@@ -74,7 +73,6 @@ public class RegisterActivity extends AppCompatActivity {
                           finish();
                       }
                       else {
-                          //Toast.makeText(this, "Registration failed: " + dbTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
                           Snackbar.make(findViewById(android.R.id.content), "Registration failed: " + dbTask.getException().getMessage(), Snackbar.LENGTH_SHORT).show();
                       }
                    });
@@ -89,7 +87,6 @@ public class RegisterActivity extends AppCompatActivity {
                    errorMessage = "Authentication failed: " + task.getException().getMessage();
                }
                Snackbar.make(findViewById(android.R.id.content), errorMessage, Snackbar.LENGTH_SHORT).show();
-               //Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
            }
         });
     }

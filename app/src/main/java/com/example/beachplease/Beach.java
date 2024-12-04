@@ -19,8 +19,8 @@ public class Beach implements Parcelable {
     private String hours;
     private Double avgRating;
     private String picture;
-    private Object reviews; // Accepts both List<String> or Map<String, Boolean> types
-    private Map<String, Integer> tags; // Map of tag name to count
+    private Object reviews;
+    private Map<String, Integer> tags;
     private String blurb;
 
     public Beach(String name, Double longitude, Double latitude, String hours, Double averageRating, String picture, String blurb) {
@@ -35,7 +35,6 @@ public class Beach implements Parcelable {
         this.tags = new HashMap<>();
     }
 
-    // Default constructor for Firebase
     public Beach() {
         this.reviews = new ArrayList<>();
         this.tags = new HashMap<>();
@@ -50,12 +49,10 @@ public class Beach implements Parcelable {
         picture = in.readString();
         blurb = in.readString();
 
-        // Deserialize reviews
         List<String> reviewsList = new ArrayList<>();
         in.readList(reviewsList, String.class.getClassLoader());
         reviews = reviewsList;
 
-        // Deserialize tags
         int tagCount = in.readInt();
         tags = new HashMap<>();
         for (int i = 0; i < tagCount; i++) {
@@ -75,14 +72,12 @@ public class Beach implements Parcelable {
         dest.writeString(picture);
         dest.writeString(blurb);
 
-        // Serialize reviews as a List<String>
         if (reviews instanceof List) {
             dest.writeList((List<String>) reviews);
         } else if (reviews instanceof Map) {
             dest.writeList(new ArrayList<>(((Map<String, Boolean>) reviews).keySet()));
         }
 
-        // Serialize tags as a Map<String, Integer>
         dest.writeInt(tags.size());
         for (Map.Entry<String, Integer> entry : tags.entrySet()) {
             dest.writeString(entry.getKey());
@@ -140,7 +135,6 @@ public class Beach implements Parcelable {
         return new ArrayList<>();
     }
 
-    // Convert tags to Map<String, Integer>
     public Map<String, Integer> getTags() {
         return tags;
     }
@@ -155,15 +149,6 @@ public class Beach implements Parcelable {
 
     public void addTag(String tag) {
         tags.put(tag, tags.getOrDefault(tag, 0) + 1);
-    }
-
-    public void updateAvgRating(Double rating) {
-        int reviewCount = getReviews().size();
-        if (reviewCount == 0 || avgRating == null) {
-            avgRating = rating;
-        } else {
-            avgRating = ((avgRating * reviewCount) + rating) / (reviewCount + 1);
-        }
     }
 
     public void addBeachToFirebase() {
