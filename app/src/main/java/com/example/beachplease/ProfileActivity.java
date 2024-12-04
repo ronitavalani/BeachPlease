@@ -210,6 +210,7 @@ public class ProfileActivity extends AppCompatActivity {
         ratingBar.setNumStars(5);
         ratingBar.setStepSize(0.5f);
         ratingBar.setMax(5);
+        ratingBar.setRating(review.getRating().floatValue());
 
         currentImageView = new ImageView(this);
         currentImageView.setLayoutParams(new LinearLayout.LayoutParams(
@@ -220,9 +221,9 @@ public class ProfileActivity extends AppCompatActivity {
             Bitmap bitmap = decodeBase64ToImage(review.getPicUrl());
             if (bitmap != null) {
                 currentImageView.setImageBitmap(bitmap);
+                layout.addView(currentImageView);
             }
         }
-        layout.addView(currentImageView);
 
         Button changeImageButton = new Button(this);
         changeImageButton.setText("Upload/Change Image");

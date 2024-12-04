@@ -103,4 +103,10 @@ public class RegisterActivity extends AppCompatActivity {
 
         registerUser(email, password, name);
     }
+
+    public void loginClick(android.view.View view) {
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
 }
