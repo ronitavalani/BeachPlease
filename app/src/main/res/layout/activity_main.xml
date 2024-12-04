@@ -4,7 +4,6 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <!-- Header -->
     <TextView
         android:id="@+id/header"
         android:layout_width="wrap_content"
@@ -16,7 +15,6 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp" />
 
-    <!-- Filter Button -->
     <ImageButton
         android:id="@+id/filterButton"
         android:layout_width="36dp"
@@ -28,7 +26,6 @@
         android:contentDescription="Filter Button"
         android:src="@drawable/ic_filter_button" />
 
-    <!-- Google Map API View -->
     <fragment
         android:id="@+id/mapView"
         android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -37,7 +34,6 @@
         android:layout_below="@id/header"
         android:layout_above="@id/navigationBar" />
 
-    <!-- Navigation Bar -->
     <LinearLayout
         android:id="@+id/navigationBar"
         android:layout_width="match_parent"
@@ -47,7 +43,6 @@
         android:gravity="center"
         android:background="#FFFFFF">
 
-        <!-- Map Tab (using built-in location icon) -->
         <ImageButton
             android:id="@+id/mapTab"
             android:layout_width="0dp"
@@ -57,7 +52,6 @@
             android:contentDescription="Map Tab"
             android:background="?attr/selectableItemBackgroundBorderless" />
 
-        <!-- Profile Tab (using built-in person icon) -->
         <ImageButton
             android:id="@+id/profileTab"
             android:layout_width="0dp"

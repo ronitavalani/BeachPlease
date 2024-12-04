@@ -33,7 +33,6 @@ public class RegisterActivity extends AppCompatActivity {
         this.reference = reference;
     }
 
-    // Default constructor for Robolectric and normal app usage
     public RegisterActivity() {
         this(FirebaseAuth.getInstance(), FirebaseDatabase.getInstance().getReference("users"));
     }

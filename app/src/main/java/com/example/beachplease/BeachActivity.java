@@ -69,11 +69,11 @@ public class BeachActivity extends AppCompatActivity {
     private TextView liveWeatherInfo;
     private LinearLayout tagLayout, reviewContainer;
     private LinearLayout forecastLayout;
-    private RatingBar avgRatingBar; // RatingBar for average rating
+    private RatingBar avgRatingBar;
     private static final String API_KEY = "60656159d401dedb2ab28b487e8bd931";
     private static final int IMAGE_REQUEST = 1;
     DatabaseReference databaseRef;
-    private Set<String> loadedReviewIds = new HashSet<>(); // Track loaded reviews
+    private Set<String> loadedReviewIds = new HashSet<>();
     private Uri selectImage;
     private StorageReference storageReference;
     private android.webkit.MimeTypeMap MimeTypeMap;
@@ -91,13 +91,11 @@ public class BeachActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beach);
 
-        // Initialize storageReference to the "images" folder in Firebase Storage
         storageReference = FirebaseStorage.getInstance().getReference().child("images");
 
         Beach selectedBeach = getIntent().getParcelableExtra("selectedBeach");
         databaseRef = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/").getReference();
 
-        // Initialize views
         ImageButton mapTab = findViewById(R.id.mapTab);
         ImageButton profileTab = findViewById(R.id.profileTab);
         beachImage = findViewById(R.id.beachImage);
@@ -108,17 +106,15 @@ public class BeachActivity extends AppCompatActivity {
         forecastLayout = findViewById(R.id.forecastLayout);
         tagLayout = findViewById(R.id.tagLayout);
         reviewContainer = findViewById(R.id.reviewContainer);
-        avgRatingBar = findViewById(R.id.avgRatingBar); // Initialize RatingBar
+        avgRatingBar = findViewById(R.id.avgRatingBar);
 
-        // Set up navigation
         mapTab.setOnClickListener(v -> navigateTo(MainActivity.class));
         profileTab.setOnClickListener(v -> navigateTo(ProfileActivity.class));
 
-        // Populate UI with Beach data
         if (selectedBeach != null) {
             populateBeachData(selectedBeach);
-            displayReviews(selectedBeach.getName()); // Load initial reviews
-            addReviewListener(selectedBeach.getName()); // Listen for new reviews
+            displayReviews(selectedBeach.getName());
+            addReviewListener(selectedBeach.getName());
         }
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -129,6 +125,25 @@ public class BeachActivity extends AppCompatActivity {
 
         Button addReviewButton = findViewById(R.id.addReview);
         addReviewButton.setOnClickListener(v -> showAddReviewDialog(selectedBeach, userId));
+
+        Button directionsButton = findViewById(R.id.directionsButton);
+        directionsButton.setOnClickListener(v -> {
+            if (selectedBeach != null) {
+                openGoogleMapsForDirections(selectedBeach.getLatitude(), selectedBeach.getLongitude(), selectedBeach.getName());
+            }
+        });
+    }
+
+    private void openGoogleMapsForDirections(double latitude, double longitude, String name) {
+        String uri = String.format(Locale.ENGLISH, "geo:%f,%f?q=%f,%f(%s)", latitude, longitude, latitude, longitude, name);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        intent.setPackage("com.google.android.apps.maps");
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            Snackbar.make(findViewById(android.R.id.content), "Google Maps is not installed.", Snackbar.LENGTH_SHORT).show();
+        }
     }
 
     void populateBeachData(Beach selectedBeach) {
@@ -149,7 +164,6 @@ public class BeachActivity extends AppCompatActivity {
             if (task.isSuccessful() && task.getResult().exists()) {
                 Map<String, Integer> tagCounts = new HashMap<>();
 
-                // Populate tagCounts with the latest data from Firebase
                 for (DataSnapshot tagSnapshot : task.getResult().getChildren()) {
                     String tag = tagSnapshot.getKey();
                     Integer count = tagSnapshot.getValue(Integer.class);
@@ -158,27 +172,24 @@ public class BeachActivity extends AppCompatActivity {
                     }
                 }
 
-                // Sort tags by frequency and alphabetically as a tiebreaker
                 List<Map.Entry<String, Integer>> sortedTags = new ArrayList<>(tagCounts.entrySet());
                 sortedTags.sort((entry1, entry2) -> {
-                    int frequencyComparison = entry2.getValue().compareTo(entry1.getValue()); // Descending frequency
-                    return frequencyComparison != 0 ? frequencyComparison : entry1.getKey().compareTo(entry2.getKey()); // Alphabetical tie-breaker
+                    int frequencyComparison = entry2.getValue().compareTo(entry1.getValue());
+                    return frequencyComparison != 0 ? frequencyComparison : entry1.getKey().compareTo(entry2.getKey());
                 });
 
-                // Select the top two tags
                 List<String> topTags = new ArrayList<>();
                 for (int i = 0; i < Math.min(2, sortedTags.size()); i++) {
                     topTags.add(sortedTags.get(i).getKey());
                 }
 
-                // Clear the existing tags in the layout and display the top two
                 tagLayout.removeAllViews();
                 for (String tag : topTags) {
                     TextView tagView = new TextView(this);
                     tagView.setText("\u2022 " + tag);
                     tagView.setTextSize(15);
                     tagView.setTextColor(getResources().getColor(R.color.blue_hint));
-                    tagView.setPadding(0, 4, 0, 4); // Adds spacing between each tag item
+                    tagView.setPadding(0, 4, 0, 4);
                     tagLayout.addView(tagView);
                 }
             } else {
@@ -219,7 +230,6 @@ public class BeachActivity extends AppCompatActivity {
 
                 String formattedWeatherInfo = "Temperature: " + temp + "°F\n" + "Humidity: " + humidity + "%\n" + "Conditions: " + weatherCondition;
 
-                //wave height
                 String waveURL = "https://marine-api.open-meteo.com/v1/marine?latitude=" +
                         latitude + "&longitude=" + longitude + "&hourly=wave_height";
                 url = new URL(waveURL);
@@ -240,7 +250,6 @@ public class BeachActivity extends AppCompatActivity {
                 final String finalInfo = formattedWeatherInfo + "\nWave Height: " + waveHeight + " meters";
                 runOnUiThread(() -> liveWeatherInfo.setText(finalInfo));
 
-                //FOR WEATHER FORECAST
                 String forecastURL = "https://api.openweathermap.org/data/2.5/forecast?lat=" +
                         latitude + "&lon=" + longitude + "&appid=" + API_KEY + "&units=imperial";
                 url = new URL(forecastURL);
@@ -259,7 +268,6 @@ public class BeachActivity extends AppCompatActivity {
                 JSONArray forecastList = forecastResponse.getJSONArray("list");
                 runOnUiThread(() -> forecastLayout.removeAllViews());
 
-                //display next 8 increments
                 SimpleDateFormat dateFormat = new SimpleDateFormat("h a", Locale.getDefault());
                 for (int i = 0; i < 8 && i < forecastList.length(); i++) {
                     JSONObject forecast = forecastList.getJSONObject(i);
@@ -269,26 +277,22 @@ public class BeachActivity extends AppCompatActivity {
                     long forecastTime = forecast.getLong("dt") * 1000;
                     String formatTime = dateFormat.format(new Date(forecastTime));
                     runOnUiThread(() -> {
-                        //container
                         LinearLayout forecastItem = new LinearLayout(this);
                         forecastItem.setOrientation(LinearLayout.VERTICAL);
                         forecastItem.setPadding(16, 8, 16,8);
 
-                        //display time
                         TextView timeTextView = new TextView(this);
                         timeTextView.setText(formatTime);
                         timeTextView.setTextSize(14);
                         timeTextView.setTextColor(getResources().getColor(android.R.color.black));
                         forecastItem.addView(timeTextView);
 
-                        //display temperature
                         TextView tempTextView = new TextView(this);
                         tempTextView.setText(String.format(Locale.getDefault(), "%.0f°F", forecastTemp));
                         tempTextView.setTextSize(16);
                         tempTextView.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
                         forecastItem.addView(tempTextView);
 
-                        //add forecast item to the horizontal layout
                         forecastLayout.addView(forecastItem);
                     });
                 }
@@ -304,8 +308,8 @@ public class BeachActivity extends AppCompatActivity {
             if (task.isSuccessful()) {
                 for (DataSnapshot reviewIdSnapshot : task.getResult().getChildren()) {
                     String reviewId = reviewIdSnapshot.getKey();
-                    if (!loadedReviewIds.contains(reviewId)) { // Check if already loaded
-                        loadedReviewIds.add(reviewId); // Mark as loaded
+                    if (!loadedReviewIds.contains(reviewId)) {
+                        loadedReviewIds.add(reviewId);
                         fetchAndDisplayReview(reviewId);
                     }
                 }
@@ -320,7 +324,7 @@ public class BeachActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, String previousChildName) {
                 String reviewId = snapshot.getKey();
-                if (!loadedReviewIds.contains(reviewId)) { // Only load new reviews
+                if (!loadedReviewIds.contains(reviewId)) {
                     loadedReviewIds.add(reviewId);
                     fetchAndDisplayReview(reviewId);
                 }
@@ -419,7 +423,6 @@ public class BeachActivity extends AppCompatActivity {
         builder.setPositiveButton("Submit", (dialog, which) -> {
             String reviewText = reviewInput.getText().toString();
             Double rating = (double) ratingBar.getRating();
-           // String picUrl= picUrlInput.getText().toString();
 
             if (!reviewText.isEmpty() && rating > 0) {
                 Review newReview = new Review(selectedBeach.getName(), rating, date, user, reviewText, new ArrayList<>(selectedTags));
@@ -471,8 +474,8 @@ public class BeachActivity extends AppCompatActivity {
                 double avgRating = totalRating / reviewCount;
                 beachRef.child("avgRating").setValue(avgRating);
 
-                avgRatingBar.setStepSize(0.5f); // Set step size
-                avgRatingBar.setRating((float) avgRating); // Explicitly cast to float
+                avgRatingBar.setStepSize(0.5f);
+                avgRatingBar.setRating((float) avgRating);
             } else {
                 Snackbar.make(findViewById(android.R.id.content), "Failed to retrieve review rating.", Snackbar.LENGTH_SHORT).show();
             }
@@ -498,23 +501,21 @@ public class BeachActivity extends AppCompatActivity {
         reviewRatingBar.setNumStars(5);
         reviewRatingBar.setStepSize(0.5f);
         reviewRatingBar.setMax(5);
-        reviewRatingBar.setIsIndicator(false); // Make it clickable since indicator style is read-only by default
+        reviewRatingBar.setIsIndicator(false);
         reviewRatingBar.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
         reviewRatingBar.setRating(review.getRating().floatValue());
-        reviewRatingBar.setIsIndicator(true); // Set to non-clickable for review display
+        reviewRatingBar.setIsIndicator(true);
 
         TextView reviewTags = new TextView(this);
         List<String> tags = review.getTags() != null ? review.getTags() : new ArrayList<>();
         reviewTags.setText("Tags: " + String.join(", ", tags));
 
-       // reviewImage(review.getPicUrl(), reviewLayout );
-
         reviewLayout.addView(reviewAuthor);
         reviewLayout.addView(reviewDate);
         reviewLayout.addView(reviewText);
-        reviewLayout.addView(reviewRatingBar); // Add RatingBar for individual review
+        reviewLayout.addView(reviewRatingBar);
         reviewLayout.addView(reviewTags);
 
         if (review.getPicUrl() != null && !review.getPicUrl().isEmpty()) {
@@ -543,10 +544,8 @@ public class BeachActivity extends AppCompatActivity {
         beachTagsRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                // Create a map to hold updated tag counts
                 Map<String, Integer> tagsMap = new HashMap<>();
 
-                // Populate the map with existing tag counts from Firebase
                 if (snapshot.exists()) {
                     for (DataSnapshot tagSnapshot : snapshot.getChildren()) {
                         String tag = tagSnapshot.getKey();
@@ -555,12 +554,10 @@ public class BeachActivity extends AppCompatActivity {
                     }
                 }
 
-                // Increment the count for each tag in newTags
                 for (String tag : newTags) {
                     tagsMap.put(tag, tagsMap.getOrDefault(tag, 0) + 1);
                 }
 
-                // Push the updated tag count map back to Firebase
                 beachTagsRef.setValue(tagsMap);
                 displayTags(selectedBeach);
             }
@@ -598,7 +595,6 @@ public class BeachActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             selectImage = data.getData();
-            // Log the selected image URI to confirm it's correct
             Log.d("ImagePicker", "Selected Image URI: " + selectImage.toString());
             Snackbar.make(findViewById(android.R.id.content), "Image Selected Successfully!", Snackbar.LENGTH_SHORT).show();
         } else {
@@ -624,7 +620,7 @@ public class BeachActivity extends AppCompatActivity {
         try {
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream); // Compress to reduce size
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream);
             byte[] imageBytes = outputStream.toByteArray();
             return Base64.encodeToString(imageBytes, Base64.DEFAULT);
         } catch (Exception e) {

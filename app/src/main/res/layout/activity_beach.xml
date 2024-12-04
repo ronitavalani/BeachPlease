@@ -51,6 +51,14 @@
                 android:layout_marginBottom="16dp"
                 android:text="Beach Description" />
 
+            <Button
+                android:id="@+id/directionsButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:text="Directions"
+                android:textSize="16sp" />
+
             <TextView
                 android:id="@+id/beachTimes"
                 android:layout_width="wrap_content"

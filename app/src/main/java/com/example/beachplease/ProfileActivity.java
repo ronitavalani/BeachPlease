@@ -67,13 +67,11 @@ public class ProfileActivity extends AppCompatActivity {
         userEmailTextView = findViewById(R.id.user_email);
         reviewsSection = findViewById(R.id.reviews_section);
 
-        // Initialize Firebase Auth and Database
         auth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = auth.getCurrentUser();
         databaseRef = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/").getReference();
         usersRef = databaseRef.child("users").child(currentUser.getUid());
 
-        // Display user information
         if (currentUser != null) {
             String userId = currentUser.getUid();
             displayUserInfo(userId);
@@ -122,7 +120,7 @@ public class ProfileActivity extends AppCompatActivity {
 
     boolean displayReview(Review review, String reviewId) {
         if (review == null) {
-            return false; // Return false if the review is null
+            return false;
         }
 
         LinearLayout reviewLayout = new LinearLayout(this);
@@ -156,7 +154,7 @@ public class ProfileActivity extends AppCompatActivity {
             if (decodedImage != null) {
                 ImageView reviewImageView = new ImageView(this);
                 reviewImageView.setLayoutParams(new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, 400)); // Adjust height as needed
+                        LinearLayout.LayoutParams.MATCH_PARENT, 400));
                 reviewImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 reviewImageView.setImageBitmap(decodedImage);
                 reviewLayout.addView(reviewImageView);
@@ -165,18 +163,15 @@ public class ProfileActivity extends AppCompatActivity {
 
         }
 
-        // Buttons layout for Edit and Delete buttons
         LinearLayout buttonLayout = new LinearLayout(this);
         buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
 
-        // Edit button
         Button editButton = new Button(this);
         editButton.setText("Edit Review");
         editButton.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
         editButton.setOnClickListener(v -> showEditReviewDialog(review, reviewId));
         buttonLayout.addView(editButton);
 
-        // Delete button
         Button deleteButton = new Button(this);
         deleteButton.setText("Delete Review");
         deleteButton.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
@@ -222,7 +217,6 @@ public class ProfileActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.MATCH_PARENT, 400)); // Set fixed height
         currentImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
-        // Display the current image if it exists
         if (review.getPicUrl() != null && !review.getPicUrl().isEmpty()) {
             Bitmap bitmap = decodeBase64ToImage(review.getPicUrl());
             if (bitmap != null) {
@@ -242,10 +236,9 @@ public class ProfileActivity extends AppCompatActivity {
         Button removeImageButton = new Button(this);
         removeImageButton.setText("Remove Image");
         removeImageButton.setOnClickListener(v -> {
-            review.setPicUrl(null); // Remove the image from the review object
-            currentImageView.setImageDrawable(null); // Clear the image view
+            review.setPicUrl(null);
+            currentImageView.setImageDrawable(null);
 
-            // Update Firebase immediately to remove the image
             databaseRef.child("reviews").child(reviewId).child("picUrl").setValue(null)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
@@ -303,23 +296,20 @@ public class ProfileActivity extends AppCompatActivity {
         builder.setPositiveButton("Save", (dialog, which) -> {
             String updatedComment = reviewInput.getText().toString();
             double updatedRating = (double) ratingBar.getRating();
-            double oldRating = review.getRating(); // Store old rating
+            double oldRating = review.getRating();
 
-            // Update review object with new data
             review.setComment(updatedComment);
             review.setRating(updatedRating);
             review.setTags(selectedTags);
 
-            // Calculate tags that were deselected and newly selected
             Set<String> deselectedTags = new HashSet<>(originalTags);
             deselectedTags.removeAll(selectedTags);
 
             Set<String> newTags = new HashSet<>(selectedTags);
             newTags.removeAll(originalTags);
 
-            // Update Firebase with the edited review, update tags, and rating
             updateReviewInFirebase(reviewId, review, deselectedTags, newTags, review.getBeachName());
-            updateEditedRating(review.getBeachName(), oldRating, updatedRating); // Update rating with old and new ratings
+            updateEditedRating(review.getBeachName(), oldRating, updatedRating);
         });
         builder.setNegativeButton("Cancel", null);
         builder.show();
@@ -330,11 +320,10 @@ public class ProfileActivity extends AppCompatActivity {
             if (task.isSuccessful()) {
                 Snackbar.make(findViewById(android.R.id.content), "Review updated Successfully", Snackbar.LENGTH_SHORT).show();
 
-                // Update tags for the associated beach
                 updateBeachTags(beachName, deselectedTags, newTags);
 
-                reviewsSection.removeAllViews(); // Clear current reviews
-                loadUserReviews(auth.getCurrentUser().getUid()); // Reload updated reviews
+                reviewsSection.removeAllViews();
+                loadUserReviews(auth.getCurrentUser().getUid());
             } else {
                 Snackbar.make(findViewById(android.R.id.content), "Failed to update review", Snackbar.LENGTH_SHORT).show();
             }
@@ -364,7 +353,7 @@ public class ProfileActivity extends AppCompatActivity {
                                     loadUserReviews(userId);
 
                                     updateBeachTags(beachName, tagsToRemove, new HashSet<>());
-                                    updateDeletedRating(beachName, deletedRating); // Update rating after delete
+                                    updateDeletedRating(beachName, deletedRating);
                                     success.set(true);
                                 } else {
                                     Snackbar.make(findViewById(android.R.id.content), "Failed to delete review", Snackbar.LENGTH_SHORT).show();
@@ -429,12 +418,10 @@ public class ProfileActivity extends AppCompatActivity {
                 double currAvgRating = task.getResult().child("avgRating").getValue(Double.class);
                 long reviewCount = task.getResult().child("reviews").getChildrenCount();
 
-                // Calculate total rating, adjust for old and new ratings, and update average
                 double totalRating = currAvgRating * reviewCount;
                 totalRating = totalRating - oldRating + newRating;
                 double avgRating = totalRating / reviewCount;
 
-                // Update Firebase with the new average rating
                 beachRef.child("avgRating").setValue(avgRating);
             } else {
                 Snackbar.make(findViewById(android.R.id.content), "Failed to update rating after edit", Snackbar.LENGTH_SHORT).show();
@@ -455,15 +442,12 @@ public class ProfileActivity extends AppCompatActivity {
                 Log.d("AVG RATING", String.valueOf(reviewCount));
 
                 if (reviewCount > 0) {
-                    // Calculate total rating, subtract deleted rating, and update average
                     double totalRating = currAvgRating * (reviewCount + 1);
                     totalRating -= deletedRating;
                     double avgRating = totalRating / reviewCount;
 
-                    // Update Firebase with the new average rating
                     beachRef.child("avgRating").setValue(avgRating);
                 } else {
-                    // If no reviews remain, reset the rating to 0 or N/A
                     beachRef.child("avgRating").setValue(0.0);
                 }
             } else {
@@ -518,13 +502,11 @@ public class ProfileActivity extends AppCompatActivity {
             if (selectImage != null && currentReview != null) {
                 String base64Image = encodeImageToBase64(selectImage);
                 if (base64Image != null) {
-                    // Update the review object with the new image
                     currentReview.setPicUrl(base64Image);
                     Bitmap bitmap = decodeBase64ToImage(base64Image);
                     if (bitmap != null) {
-                        currentImageView.setImageBitmap(bitmap); // Update the ImageView
+                        currentImageView.setImageBitmap(bitmap);
                     }
-                    // Save the new image URL to Firebase
                     databaseRef.child("reviews").child(currentReviewId).child("picUrl").setValue(base64Image)
                             .addOnCompleteListener(task -> {
                                 if (task.isSuccessful()) {
@@ -548,7 +530,7 @@ public class ProfileActivity extends AppCompatActivity {
         try {
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream); // Compress to reduce size
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, outputStream);
             byte[] imageBytes = outputStream.toByteArray();
             return Base64.encodeToString(imageBytes, Base64.DEFAULT);
         } catch (Exception e) {

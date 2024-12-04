@@ -54,7 +54,6 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void logInClick(android.view.View view) {
-        //get email and password from frontend
         String email = emailField.getText().toString();
         String password = passwordField.getText().toString();
         if (email.isEmpty() || password.isEmpty()) {
