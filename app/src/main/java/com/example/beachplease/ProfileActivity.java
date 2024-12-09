@@ -24,7 +24,6 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.bumptech.glide.Glide;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -52,7 +51,6 @@ public class ProfileActivity extends AppCompatActivity {
     protected DatabaseReference usersRef;
 
     private static final int IMAGE_REQUEST = 1;
-    private Uri selectImage;
     private Review currentReview;
     private ImageView currentImageView;
     private String currentReviewId;
@@ -69,11 +67,11 @@ public class ProfileActivity extends AppCompatActivity {
 
         auth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = auth.getCurrentUser();
-        databaseRef = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/").getReference();
-        usersRef = databaseRef.child("users").child(currentUser.getUid());
 
         if (currentUser != null) {
             String userId = currentUser.getUid();
+            databaseRef = FirebaseDatabase.getInstance("https://beachplease-d3daa-default-rtdb.firebaseio.com/").getReference();
+            usersRef = databaseRef.child("users").child(currentUser.getUid());
             displayUserInfo(userId);
             loadUserReviews(userId);
         } else {
@@ -498,7 +496,7 @@ public class ProfileActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            selectImage = data.getData();
+            Uri selectImage = data.getData();
             if (selectImage != null && currentReview != null) {
                 String base64Image = encodeImageToBase64(selectImage);
                 if (base64Image != null) {
