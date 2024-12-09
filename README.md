@@ -20,4 +20,4 @@ BeachPlease is a mobile app designed to aid beachgoers with real time informatio
 ## Contributors
 - **Ronit Avalani** ([avalani@usc.edu](mailto:avalani@usc.edu))
 - **Renee Pan** ([reneepan@usc.edu](mailto:reneepan@usc.edu))
-- **Manasi Garg** ([manasiga@usc.edu](mailto:manasiga@usc.edu))–
+- **Manasi Garg** ([manasiga@usc.edu](mailto:manasiga@usc.edu))
